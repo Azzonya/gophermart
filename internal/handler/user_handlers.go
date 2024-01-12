@@ -1,6 +1,9 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
 
 type UserHandlers struct {
 }
@@ -11,6 +14,19 @@ func New() *UserHandlers {
 
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	// Реализация регистрации пользователя
+	var err error
+
+	req := &RegisterRequest{}
+
+	err = c.BindJSON(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to read body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
 }
 
 func (u *UserHandlers) LoginUser(c *gin.Context) {

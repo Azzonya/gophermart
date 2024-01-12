@@ -67,14 +67,12 @@ func (o *Rest) Stop(ctx context.Context) error {
 }
 
 func (o *Rest) SetRouters(r *gin.Engine) {
-	apiGroup := r.Group("/api")
-	userGroup := apiGroup.Group("/user")
 
-	userGroup.POST("/register", o.userHandlers.RegisterUser)
-	userGroup.POST("/login", o.userHandlers.LoginUser)
-	userGroup.POST("/orders", o.userHandlers.UploadOrder)
-	userGroup.GET("/orders", o.userHandlers.GetOrders)
-	userGroup.GET("/balance", o.userHandlers.GetBalance)
-	userGroup.POST("/balance/withdraw", o.userHandlers.WithdrawBalance)
-	userGroup.POST("/withdrawals", o.userHandlers.GetWithdrawals)
+	r.POST("/api/user/register", o.userHandlers.RegisterUser)
+	r.POST("/api/user/login", o.userHandlers.LoginUser)
+	r.POST("/api/user/orders", o.userHandlers.UploadOrder)
+	r.GET("/api/user/orders", o.userHandlers.GetOrders)
+	r.GET("/api/user/balance", o.userHandlers.GetBalance)
+	r.POST("/api/user/balance/withdraw", o.userHandlers.WithdrawBalance)
+	r.POST("/api/user/withdrawals", o.userHandlers.GetWithdrawals)
 }
