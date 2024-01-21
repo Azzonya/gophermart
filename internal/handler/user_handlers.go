@@ -1,11 +1,15 @@
 package handler
 
 import (
+	"context"
+	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type UserHandlers struct {
+	userUsecase *user.Usecase
 }
 
 func New() *UserHandlers {
@@ -13,13 +17,36 @@ func New() *UserHandlers {
 }
 
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
-	// Реализация регистрации пользователя
 	var err error
+	ctx := context.Background()
 
-	req := &RegisterRequest{}
+	req := &model.User{}
 
 	err = c.BindJSON(req)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to read body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	exist, err := u.userUsecase.IsLoginTaken(ctx, req.Login)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to check login",
+			"error":   err.Error(),
+		})
+		return
+	}
+	if exist {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": "Login is already taken",
+		})
+		return
+	}
+
+	if err = u.userUsecase.Register(ctx, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to read body",
 			"error":   err.Error(),
@@ -27,6 +54,8 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
+	c.Header("Set-Cookie", req.Login)
+	c.JSON(http.StatusOK, nil)
 }
 
 func (u *UserHandlers) LoginUser(c *gin.Context) {
