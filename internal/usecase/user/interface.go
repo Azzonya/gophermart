@@ -8,4 +8,5 @@ import (
 type UserServiceI interface {
 	IsLoginTaken(ctx context.Context, login string) (bool, error)
 	Register(ctx context.Context, user *model.User) error
+	Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error)
 }

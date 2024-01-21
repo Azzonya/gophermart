@@ -20,5 +20,10 @@ func (u *Usecase) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 }
 
 func (u *Usecase) Register(ctx context.Context, user *model.User) error {
-	return nil
+	return u.srv.Register(ctx, user)
+}
+
+func (u *Usecase) CheckAuth(ctx context.Context, pars *model.GetPars) (bool, error) {
+	_, exist, err := u.srv.Get(ctx, pars)
+	return exist, err
 }
