@@ -19,7 +19,7 @@ func (u *Usecase) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 	return u.srv.IsLoginTaken(ctx, login)
 }
 
-func (u *Usecase) Register(ctx context.Context, user *model.User) error {
+func (u *Usecase) Register(ctx context.Context, user *model.GetPars) error {
 	return u.srv.Register(ctx, user)
 }
 

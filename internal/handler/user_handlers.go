@@ -3,13 +3,15 @@ package handler
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type UserHandlers struct {
-	userUsecase *user.Usecase
+	userUsecase  *user.Usecase
+	orderUsecase *order.Usecase
 }
 
 func New() *UserHandlers {
@@ -20,7 +22,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	var err error
 	ctx := context.Background()
 
-	req := &model.User{}
+	req := &model.GetPars{}
 
 	err = c.BindJSON(req)
 	if err != nil {
@@ -33,7 +35,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	exist, err := u.userUsecase.IsLoginTaken(ctx, req.Login)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to check login",
 			"error":   err.Error(),
 		})
@@ -91,6 +93,13 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 
 func (u *UserHandlers) UploadOrder(c *gin.Context) {
 	// Реализация загрузки номера заказа
+	orderNumber := c.PostForm("orderNumber")
+
+	if !u.orderUsecase.IsLuhnValid(orderNumber) {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
+		return
+	}
+
 }
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS user (
 CREATE INDEX idx_user_login ON "user" (login);
 
 CREATE TABLE IF NOT EXISTS order (
-    code INT NOT NULL PRIMARY KEY,
+    code VARCHAR(255) NOT NULL PRIMARY KEY,
     uploaded_at timestamp default current_timestamp,
     status VARCHAR(255) NOT NULL DEFAULT '',
     user_id INT REFERENCES user(id),

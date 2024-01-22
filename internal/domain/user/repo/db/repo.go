@@ -1,4 +1,4 @@
-package repo
+package db
 
 import (
 	"context"
@@ -57,14 +57,14 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, e
 }
 
 func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
-	_, err := r.Con.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
+	_, err := r.Con.Exec(ctx, "INSERT INTO user (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
 	return err
 }
 
 func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error) {
 	var values []interface{}
 	var result model.User
-	query := "SELECT * FROM users WHERE true"
+	query := "SELECT * FROM user WHERE true"
 
 	if len(pars.Login) != 0 {
 		query += " AND login = $1"
@@ -92,7 +92,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool,
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE users SET"
+	query := "UPDATE user SET"
 
 	if len(pars.Login) != 0 {
 		query += " AND login = $1"
@@ -115,13 +115,13 @@ func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 }
 
 func (r *Repo) Delete(ctx context.Context, pars *model.GetPars) error {
-	_, err := r.Con.Exec(ctx, "DELETE FROM users WHERE login = $1;", pars.Login)
+	_, err := r.Con.Exec(ctx, "DELETE FROM user WHERE login = $1;", pars.Login)
 	return err
 }
 
 func (r *Repo) Exists(ctx context.Context, login string) (bool, error) {
 	var exist bool
-	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM users WHERE login = $1);", login).Scan(&exist)
+	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM user WHERE login = $1);", login).Scan(&exist)
 	if err != nil {
 		return false, err
 	}

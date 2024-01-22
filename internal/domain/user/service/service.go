@@ -13,7 +13,7 @@ func (s *Service) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 	return s.repoDb.Exists(ctx, login)
 }
 
-func (s *Service) Register(ctx context.Context, user *model.User) error {
+func (s *Service) Register(ctx context.Context, user *model.GetPars) error {
 	return s.repoDb.Create(ctx, user)
 }
 
