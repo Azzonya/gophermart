@@ -23,5 +23,11 @@ CREATE TABLE IF NOT EXISTS withdrawal (
     amount INT NOT NULL DEFAULT 0
 );
 
+CREATE TABLE withdrawals (
+                             order_number VARCHAR(255),
+                             sum INTEGER,
+                             processed_at TIMESTAMPTZ
+);
+
 CREATE INDEX idx_withdrawal_order_code ON withdrawal (order_code);
 

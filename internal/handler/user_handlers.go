@@ -2,9 +2,13 @@ package handler
 
 import (
 	"context"
+	"fmt"
+	"github.com/Azzonya/gophermart/internal/constant"
+	model2 "github.com/Azzonya/gophermart/internal/domain/order/model"
 	"github.com/Azzonya/gophermart/internal/domain/user/model"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"
+	"github.com/Azzonya/gophermart/internal/usecase/withdrawal"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -12,6 +16,7 @@ import (
 type UserHandlers struct {
 	userUsecase  *user.Usecase
 	orderUsecase *order.Usecase
+	withdrawal   *withdrawal.Usecase
 }
 
 func New() *UserHandlers {
@@ -100,18 +105,175 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 		return
 	}
 
+	order, orderExist, err := u.orderUsecase.Get(context.Background(), &model2.GetPars{
+		OrderNumber: orderNumber,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get order",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	login, err := c.Cookie("login")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get login",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	user, _, err := u.userUsecase.Get(context.Background(),
+		&model.GetPars{
+			Login: login,
+		})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get login",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if orderExist {
+		if user.ID == order.UserID {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "already uploaded",
+			})
+			return
+		} else {
+			c.JSON(http.StatusConflict, gin.H{
+				"message": "already uploaded by different user",
+			})
+			return
+		}
+	}
+
+	err = u.orderUsecase.Create(context.Background(), &model2.GetPars{
+		OrderNumber: orderNumber,
+		Status:      constant.OrderStatusNew,
+		UserID:      user.ID,
+		Accrual:     0, // Change
+	})
 }
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {
 	// Реализация получения списка заказов пользователя
+	login, err := c.Cookie("login")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get login",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	user, _, err := u.userUsecase.Get(context.Background(),
+		&model.GetPars{
+			Login: login,
+		})
+
+	orders, err := u.orderUsecase.List(context.Background(), &model2.ListPars{
+		UserID: &user.ID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get login",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if len(orders) == 0 {
+		c.JSON(http.StatusNoContent, nil)
+		return
+	}
+
+	result := []*ListOrdersResult{}
+
+	for _, v := range orders {
+		newElement := ListOrdersResult{}
+		newElement.Encode(v)
+
+		result = append(result, &newElement)
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func (u *UserHandlers) GetBalance(c *gin.Context) {
 	// Реализация получения баланса баллов лояльности пользователя
+	login, err := c.Cookie("login")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get login",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	user, _, err := u.userUsecase.Get(context.Background(),
+		&model.GetPars{
+			Login: login,
+		})
+	fmt.Println(user)
+
+	c.JSON(http.StatusOK, UserBalanceResult{ // change
+		Balance:   0,
+		Withdrawn: 0,
+	})
 }
 
 func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 	// Реализация запроса на списание баллов
+	req := WithdrawalBalanceRequest{}
+
+	err := c.BindJSON(req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to read body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	login, err := c.Cookie("login")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get login",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	user, _, err := u.userUsecase.Get(context.Background(),
+		&model.GetPars{
+			Login: login,
+		})
+
+	if user.Balance < req.Sum {
+		c.JSON(http.StatusPaymentRequired, nil)
+		return
+	}
+
+	order, orderExist, err := u.orderUsecase.Get(context.Background(), &model2.GetPars{
+		OrderNumber: req.OrderNumber,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get order",
+			"error":   err.Error(),
+		})
+		return
+	}
+	if !orderExist {
+		c.JSON(http.StatusUnprocessableEntity, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }
 
 func (u *UserHandlers) GetWithdrawals(c *gin.Context) {

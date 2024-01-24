@@ -8,5 +8,10 @@ import (
 type UserServiceI interface {
 	IsLoginTaken(ctx context.Context, login string) (bool, error)
 	Register(ctx context.Context, user *model.GetPars) error
+	List(ctx context.Context, pars *model.ListPars) ([]*model.User, error)
 	Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error)
+	Create(ctx context.Context, obj *model.GetPars) error
+	Update(ctx context.Context, pars *model.GetPars, obj *model.GetPars) error
+	Delete(ctx context.Context, pars *model.GetPars) error
+	Exists(ctx context.Context, orderNumber string) (bool, error)
 }

@@ -3,7 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/Azzonya/gophermart/internal/client/accrual"
 	"github.com/Azzonya/gophermart/internal/config"
+	OrderService "github.com/Azzonya/gophermart/internal/domain/order/service"
+	UserService "github.com/Azzonya/gophermart/internal/domain/user/service"
+	WithdrawalService "github.com/Azzonya/gophermart/internal/domain/withdrawal/service"
 	"github.com/Azzonya/gophermart/internal/handler"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
@@ -16,14 +20,22 @@ type App struct {
 	pgpool *pgxpool.Pool
 
 	// clients
+	accrual *accrual.Client
+
+	// user
+	userService *UserService.Service
+
+	// order
+	orderService *OrderService.Service
+
+	// withdrawal
+	withdrawalService *WithdrawalService.Service
 
 	// handlers
 	userHandlers *handler.UserHandlers
 
 	// http
 	rest *Rest
-
-	// globalTracer
 
 	exitCode int
 }
