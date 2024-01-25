@@ -20,7 +20,7 @@ func New(con *pgxpool.Pool) *Repo {
 func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
 	var result []*model.Order
 	var values []interface{}
-	query := "SELECT * FROM order WHERE true"
+	query := "SELECT * FROM orders WHERE true"
 
 	if pars.UserID != nil {
 		query += " AND user_id = $1"
@@ -47,16 +47,6 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, 
 		values = append(values, *pars.Status)
 	}
 
-	if pars.MinAccrual != nil {
-		query += " AND accrual >= $6"
-		values = append(values, *pars.MinAccrual)
-	}
-
-	if pars.MaxAccrual != nil {
-		query += " AND accrual <= $7"
-		values = append(values, *pars.MaxAccrual)
-	}
-
 	rows, err := r.Con.Query(ctx, query, values...)
 	if err != nil {
 		return nil, err
@@ -65,7 +55,7 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, 
 	defer rows.Close()
 	for rows.Next() {
 		var order *model.Order
-		err = rows.Scan(&order.OrderNumber, &order.UploadedAt, &order.Status, &order.UserID, &order.Accrual)
+		err = rows.Scan(&order.OrderNumber, &order.UploadedAt, &order.Status, &order.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -77,14 +67,14 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, 
 }
 
 func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
-	_, err := r.Con.Exec(ctx, "INSERT INTO order (code, status, user_id, accrual) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.Status, obj.UserID, obj.Accrual)
+	_, err := r.Con.Exec(ctx, "INSERT INTO orders (code, status, user_id) VALUES ($1, $2, $3);", obj.OrderNumber, obj.Status, obj.UserID)
 	return err
 }
 
 func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool, error) {
 	var values []interface{}
 	var result model.Order
-	query := "SELECT * FROM order WHERE true"
+	query := "SELECT * FROM orders WHERE true"
 
 	if len(pars.UserID) != 0 {
 		query += " AND user_id = $1"
@@ -105,12 +95,6 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool
 		query += " AND user_id >= $4"
 		values = append(values, pars.UserID)
 	}
-
-	if pars.Accrual != 0 {
-		query += " AND accrual = $5"
-		values = append(values, pars.Accrual)
-	}
-
 	err := r.Con.QueryRow(ctx, query, values...).Scan(&result)
 	if err != nil {
 		return nil, false, err
@@ -122,7 +106,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE order SET"
+	query := "UPDATE orders SET"
 
 	if len(pars.UserID) != 0 {
 		query += " AND user_id = $1"
@@ -134,24 +118,19 @@ func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 		values = append(values, pars.Status)
 	}
 
-	if pars.Accrual != 0 {
-		query += " AND accrual = $3"
-		values = append(values, pars.Accrual)
-	}
-
 	_, err := r.Con.Exec(ctx, query, values...)
 
 	return err
 }
 
 func (r *Repo) Delete(ctx context.Context, pars *model.GetPars) error {
-	_, err := r.Con.Exec(ctx, "DELETE FROM order WHERE code = $1;", pars.OrderNumber)
+	_, err := r.Con.Exec(ctx, "DELETE FROM orders WHERE code = $1;", pars.OrderNumber)
 	return err
 }
 
 func (r *Repo) Exists(ctx context.Context, orderNumber string) (bool, error) {
 	var exist bool
-	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM order WHERE code = $1);", orderNumber).Scan(&exist)
+	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM orders WHERE code = $1);", orderNumber).Scan(&exist)
 	if err != nil {
 		return false, err
 	}

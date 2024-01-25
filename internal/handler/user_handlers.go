@@ -3,9 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/constant"
-	model2 "github.com/Azzonya/gophermart/internal/domain/order/model"
-	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	orderModel "github.com/Azzonya/gophermart/internal/domain/order/model"
+	userModel "github.com/Azzonya/gophermart/internal/domain/user/model"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/Azzonya/gophermart/internal/usecase/withdrawal"
@@ -27,7 +26,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	var err error
 	ctx := context.Background()
 
-	req := &model.GetPars{}
+	req := &userModel.GetPars{}
 
 	err = c.BindJSON(req)
 	if err != nil {
@@ -68,7 +67,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 func (u *UserHandlers) LoginUser(c *gin.Context) {
 	// Реализация аутентификации пользователя
 	var err error
-	req := &model.GetPars{}
+	req := &userModel.GetPars{}
 
 	err = c.BindJSON(req)
 	if err != nil {
@@ -105,7 +104,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 		return
 	}
 
-	order, orderExist, err := u.orderUsecase.Get(context.Background(), &model2.GetPars{
+	order, orderExist, err := u.orderUsecase.Get(context.Background(), &orderModel.GetPars{
 		OrderNumber: orderNumber,
 	})
 	if err != nil {
@@ -126,7 +125,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 	}
 
 	user, _, err := u.userUsecase.Get(context.Background(),
-		&model.GetPars{
+		&userModel.GetPars{
 			Login: login,
 		})
 	if err != nil {
@@ -151,12 +150,13 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 		}
 	}
 
-	err = u.orderUsecase.Create(context.Background(), &model2.GetPars{
+	err = u.orderUsecase.Create(context.Background(), &orderModel.GetPars{
 		OrderNumber: orderNumber,
-		Status:      constant.OrderStatusNew,
+		Status:      orderModel.OrderStatusNew,
 		UserID:      user.ID,
-		Accrual:     0, // Change
 	})
+
+	c.JSON(http.StatusOK, nil)
 }
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {
@@ -171,11 +171,11 @@ func (u *UserHandlers) GetOrders(c *gin.Context) {
 	}
 
 	user, _, err := u.userUsecase.Get(context.Background(),
-		&model.GetPars{
+		&userModel.GetPars{
 			Login: login,
 		})
 
-	orders, err := u.orderUsecase.List(context.Background(), &model2.ListPars{
+	orders, err := u.orderUsecase.List(context.Background(), &orderModel.ListPars{
 		UserID: &user.ID,
 	})
 	if err != nil {
@@ -215,7 +215,7 @@ func (u *UserHandlers) GetBalance(c *gin.Context) {
 	}
 
 	user, _, err := u.userUsecase.Get(context.Background(),
-		&model.GetPars{
+		&userModel.GetPars{
 			Login: login,
 		})
 	fmt.Println(user)
@@ -249,7 +249,7 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 	}
 
 	user, _, err := u.userUsecase.Get(context.Background(),
-		&model.GetPars{
+		&userModel.GetPars{
 			Login: login,
 		})
 
@@ -258,7 +258,7 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 		return
 	}
 
-	order, orderExist, err := u.orderUsecase.Get(context.Background(), &model2.GetPars{
+	_, orderExist, err := u.orderUsecase.Get(context.Background(), &orderModel.GetPars{
 		OrderNumber: req.OrderNumber,
 	})
 	if err != nil {

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/Azzonya/gophermart/internal/client/accrual"
 	"github.com/Azzonya/gophermart/internal/config"
+	WithdrawalService "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/service"
 	OrderService "github.com/Azzonya/gophermart/internal/domain/order/service"
 	UserService "github.com/Azzonya/gophermart/internal/domain/user/service"
-	WithdrawalService "github.com/Azzonya/gophermart/internal/domain/withdrawal/service"
 	"github.com/Azzonya/gophermart/internal/handler"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
@@ -28,7 +28,7 @@ type App struct {
 	// order
 	orderService *OrderService.Service
 
-	// withdrawal
+	// bonus_transactions
 	withdrawalService *WithdrawalService.Service
 
 	// handlers

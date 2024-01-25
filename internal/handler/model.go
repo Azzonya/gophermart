@@ -1,8 +1,8 @@
 package handler
 
 import (
-	model2 "github.com/Azzonya/gophermart/internal/domain/order/model"
-	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	orderModel "github.com/Azzonya/gophermart/internal/domain/order/model"
+	userModel "github.com/Azzonya/gophermart/internal/domain/user/model"
 	"time"
 )
 
@@ -11,22 +11,22 @@ type RegisterRequest struct {
 	Password string `json:"password"`
 }
 
-func (r *RegisterRequest) Decode() *model.User {
-	return &model.User{Login: r.Login, Password: r.Password}
+func (r *RegisterRequest) Decode() *userModel.User {
+	return &userModel.User{Login: r.Login, Password: r.Password}
 }
 
 type ListOrdersResult struct {
-	OrderNumber string    `json:"number"`
-	Status      string    `json:"status"`
-	Accrual     int       `json:"accrual,omitempty"`
-	UploadedAt  time.Time `json:"uploaded_at"`
+	OrderNumber string                 `json:"number"`
+	Status      orderModel.OrderStatus `json:"status"`
+	Accrual     int                    `json:"accrual,omitempty"`
+	UploadedAt  time.Time              `json:"uploaded_at"`
 }
 
-func (l *ListOrdersResult) Encode(order *model2.Order) {
-	l.UploadedAt = order.UploadedAt
-	l.Status = order.Status
-	l.Accrual = order.Accrual
-	l.OrderNumber = order.OrderNumber
+func (l *ListOrdersResult) Encode(order *orderModel.Order) {
+	//l.UploadedAt = order.UploadedAt
+	//l.Status = order.Status
+	//l.Accrual = order.
+	//l.OrderNumber = order.OrderNumber
 }
 
 type UserBalanceResult struct {

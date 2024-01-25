@@ -7,25 +7,30 @@ import (
 type Order struct {
 	OrderNumber string
 	UploadedAt  time.Time
-	Status      string
+	Status      OrderStatus
 	UserID      string
-	Accrual     int
 }
+
+type OrderStatus string
+
+const (
+	OrderStatusNew        OrderStatus = "NEW"
+	OrderStatusProcessing OrderStatus = "PROCESSING"
+	OrderStatusInvalid    OrderStatus = "INVALID"
+	OrderStatusProcessed  OrderStatus = "PROCESSED"
+)
 
 type GetPars struct {
 	OrderNumber string
 	UploadedAt  time.Time
-	Status      string
+	Status      OrderStatus
 	UserID      string
-	Accrual     int
 }
 
 type ListPars struct {
 	OrderNumber    *string
 	UploadedBefore *time.Time
 	UploadedAfter  *time.Time
-	Status         *string
+	Status         *OrderStatus
 	UserID         *string
-	MinAccrual     *int
-	MaxAccrual     *int
 }
