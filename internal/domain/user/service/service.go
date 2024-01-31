@@ -4,16 +4,16 @@ import (
 	"context"
 	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	"github.com/Azzonya/gophermart/internal/domain/user/model"
-	"github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
+	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
 	repoDB                   repoDBI
-	bonusTransactionsService bonusTransactions.WithdrawalServiceI
+	bonusTransactionsService bonustransactions.WithdrawalServiceI
 }
 
-func New(repoDB repoDBI, bonusTransactionsService bonusTransactions.WithdrawalServiceI) *Service {
+func New(repoDB repoDBI, bonusTransactionsService bonustransactions.WithdrawalServiceI) *Service {
 	return &Service{
 		repoDB:                   repoDB,
 		bonusTransactionsService: bonusTransactionsService,

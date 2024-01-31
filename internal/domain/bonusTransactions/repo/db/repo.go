@@ -140,7 +140,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransa
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE bonusTransactions"
+	query := "UPDATE bonustransactions"
 
 	paramNum := 1
 	if !pars.ProcessedAt.IsZero() {

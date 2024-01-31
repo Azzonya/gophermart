@@ -5,7 +5,7 @@ import (
 	"fmt"
 	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order/model"
-	"github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
+	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"sync"
 	"time"
@@ -13,12 +13,12 @@ import (
 
 type Service struct {
 	repoAccrual              RepoAccrualI
-	bonusTransactionsService bonusTransactions.WithdrawalServiceI
+	bonusTransactionsService bonustransactions.WithdrawalServiceI
 	orderService             order.OrderServiceI
 	Wg                       sync.WaitGroup
 }
 
-func New(repoAccrual RepoAccrualI, bonusTransactionsService bonusTransactions.WithdrawalServiceI, orderService order.OrderServiceI) *Service {
+func New(repoAccrual RepoAccrualI, bonusTransactionsService bonustransactions.WithdrawalServiceI, orderService order.OrderServiceI) *Service {
 	return &Service{
 		repoAccrual:              repoAccrual,
 		bonusTransactionsService: bonusTransactionsService,
@@ -68,6 +68,9 @@ func (s *Service) UpdateAccrualInfo(ctx context.Context) error {
 				Status:      orderModel.OrderStatus(responseResult.Status),
 				OrderNumber: v.OrderNumber,
 			})
+			if err != nil {
+				return err
+			}
 		}
 
 		bonusTransactionFound, exist, err := s.bonusTransactionsService.Get(ctx, &bonus_transactionsModel.GetPars{

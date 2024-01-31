@@ -1,4 +1,4 @@
-package bonusTransactions
+package bonustransactions
 
 import (
 	"context"

@@ -7,7 +7,7 @@ import (
 	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order/model"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user/model"
-	"github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
+	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/gin-gonic/gin"
@@ -20,10 +20,10 @@ type UserHandlers struct {
 	auth                     *auth.Auth
 	userUsecase              *user.Usecase
 	orderUsecase             *order.Usecase
-	bonusTransactionsUsecase *bonusTransactions.Usecase
+	bonusTransactionsUsecase *bonustransactions.Usecase
 }
 
-func New(auth *auth.Auth, userUsecase *user.Usecase, orderUsecase *order.Usecase, bonusTransactionsUsecase *bonusTransactions.Usecase) *UserHandlers {
+func New(auth *auth.Auth, userUsecase *user.Usecase, orderUsecase *order.Usecase, bonusTransactionsUsecase *bonustransactions.Usecase) *UserHandlers {
 	return &UserHandlers{
 		auth:                     auth,
 		userUsecase:              userUsecase,

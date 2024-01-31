@@ -4,7 +4,7 @@ import (
 	"context"
 	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	"github.com/Azzonya/gophermart/internal/domain/order/model"
-	bonus_transactions "github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
+	bonus_transactions "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"strconv"
 	"time"
 )

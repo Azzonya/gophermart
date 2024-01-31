@@ -14,7 +14,7 @@ import (
 	userRepo "github.com/Azzonya/gophermart/internal/domain/user/repo/db"
 	UserService "github.com/Azzonya/gophermart/internal/domain/user/service"
 	"github.com/Azzonya/gophermart/internal/handler"
-	"github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
+	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,7 +39,7 @@ type App struct {
 	// order
 	orderService *OrderService.Service
 
-	// bonusTransactions
+	// bonustransactions
 	bonusTransactionsService *bonusTransactionsService.Service
 
 	// handlers
@@ -72,7 +72,7 @@ func (a *App) Init() {
 		//bonus transaction
 		bonusTransactionsRepoV := bonusTransactionsRepo.New(a.pgpool)
 		a.bonusTransactionsService = bonusTransactionsService.New(bonusTransactionsRepoV)
-		bonusTransactionsUsecase := bonusTransactions.New(a.bonusTransactionsService)
+		bonusTransactionsUsecase := bonustransactions.New(a.bonusTransactionsService)
 
 		//user
 		userRepoV := userRepo.New(a.pgpool)
