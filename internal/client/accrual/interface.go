@@ -1,7 +1,9 @@
 package accrual
 
-import "context"
+import (
+	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http-gw"
+)
 
 type Client interface {
-	Send(ctx context.Context, obj *SendReq) ([]byte, error)
+	Send(orderNumber string) (*http_gw.RequestResult, error)
 }

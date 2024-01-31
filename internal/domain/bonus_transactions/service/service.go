@@ -6,8 +6,13 @@ import (
 )
 
 type Service struct {
-	repoDb      RepoDbI
-	repoAccrual RepoAccrualI
+	repoDb RepoDbI
+}
+
+func New(repoDb RepoDbI) *Service {
+	return &Service{
+		repoDb: repoDb,
+	}
 }
 
 func (s *Service) List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTransaction, error) {
@@ -22,8 +27,8 @@ func (s *Service) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTra
 	return s.repoDb.Get(ctx, pars)
 }
 
-func (s *Service) Update(ctx context.Context, pars *model.GetPars, obj *model.GetPars) error {
-	return s.repoDb.Update(ctx, pars, obj)
+func (s *Service) Update(ctx context.Context, pars *model.GetPars) error {
+	return s.repoDb.Update(ctx, pars)
 }
 
 func (s *Service) Delete(ctx context.Context, pars *model.GetPars) error {

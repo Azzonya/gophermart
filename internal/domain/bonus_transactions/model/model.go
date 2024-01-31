@@ -4,7 +4,7 @@ import "time"
 
 type BonusTransaction struct {
 	OrderNumber     string
-	UserID          int
+	UserID          string
 	ProcessedAt     time.Time
 	TransactionType TransactionType
 	Sum             int
@@ -19,7 +19,7 @@ const (
 
 type GetPars struct {
 	OrderNumber     string
-	UserID          int
+	UserID          string
 	ProcessedAt     time.Time
 	TransactionType TransactionType
 	Sum             int
@@ -27,10 +27,11 @@ type GetPars struct {
 
 type ListPars struct {
 	OrderNumber     *string
-	UserID          *int
+	UserID          *string
 	ProcessedBefore *time.Time
 	ProcessedAfter  *time.Time
-	TransactionType *TransactionType
+	TransactionType TransactionType
 	MinSum          *int
 	MaxSum          *int
+	OrderBy         string
 }

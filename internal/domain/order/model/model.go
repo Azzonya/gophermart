@@ -11,13 +11,20 @@ type Order struct {
 	UserID      string
 }
 
+type OrderWithAccrual struct {
+	OrderNumber string      `json:"number"`
+	Status      OrderStatus `json:"status"`
+	Accrual     int         `json:"accrual,omitempty"`
+	UploadedAt  string      `json:"uploaded_at"`
+}
+
 type OrderStatus string
 
 const (
 	OrderStatusNew        OrderStatus = "NEW"
 	OrderStatusProcessing OrderStatus = "PROCESSING"
-	OrderStatusInvalid    OrderStatus = "INVALID"
-	OrderStatusProcessed  OrderStatus = "PROCESSED"
+	//OrderStatusInvalid    OrderStatus = "INVALID"
+	//OrderStatusProcessed  OrderStatus = "PROCESSED"
 )
 
 type GetPars struct {
@@ -32,5 +39,7 @@ type ListPars struct {
 	UploadedBefore *time.Time
 	UploadedAfter  *time.Time
 	Status         *OrderStatus
+	Statuses       []OrderStatus
 	UserID         *string
+	OrderBy        string
 }

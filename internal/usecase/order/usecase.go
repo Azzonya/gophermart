@@ -19,8 +19,12 @@ func (u *Usecase) IsLuhnValid(orderNumber string) bool {
 	return u.srv.IsLuhnValid(orderNumber)
 }
 
-func (s *Usecase) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
-	return s.srv.List(ctx, pars)
+func (u *Usecase) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
+	return u.srv.List(ctx, pars)
+}
+
+func (u *Usecase) ListWithAccrual(ctx context.Context, pars *model.ListPars) ([]*model.OrderWithAccrual, error) {
+	return u.srv.ListWithAccrual(ctx, pars)
 }
 
 func (u *Usecase) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool, error) {
@@ -31,8 +35,8 @@ func (u *Usecase) Create(ctx context.Context, obj *model.GetPars) error {
 	return u.srv.Create(ctx, obj)
 }
 
-func (s *Usecase) Update(ctx context.Context, pars *model.GetPars, obj *model.GetPars) error {
-	return s.srv.Update(ctx, pars, obj)
+func (s *Usecase) Update(ctx context.Context, pars *model.GetPars) error {
+	return s.srv.Update(ctx, pars)
 }
 
 func (s *Usecase) Delete(ctx context.Context, pars *model.GetPars) error {

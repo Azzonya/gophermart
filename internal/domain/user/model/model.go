@@ -11,7 +11,13 @@ type User struct {
 	Balance  int
 }
 
+type UserBalance struct {
+	Current   int `json:"current"`
+	Withdrawn int `json:"withdrawn"`
+}
+
 type GetPars struct {
+	ID       string
 	Login    string
 	Password string
 	Balance  int

@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
 	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -66,23 +69,36 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool,
 	var result model.User
 	query := "SELECT * FROM users WHERE true"
 
+	paramNum := 1
+	if len(pars.ID) != 0 {
+		query += fmt.Sprintf(" AND id = $%d", paramNum)
+		values = append(values, pars.ID)
+		paramNum += 1
+	}
+
 	if len(pars.Login) != 0 {
-		query += " AND login = $1"
+		query += fmt.Sprintf(" AND login = $%d", paramNum)
 		values = append(values, pars.Login)
+		paramNum += 1
 	}
 
 	if pars.Balance != 0 {
-		query += " AND balance = $2"
+		query += fmt.Sprintf(" AND balance = $%d", paramNum)
 		values = append(values, pars.Balance)
+		paramNum += 1
 	}
 
 	if len(pars.Password) != 0 {
-		query += " AND password = $3"
+		query += fmt.Sprintf(" AND password = $%d", paramNum)
 		values = append(values, pars.Password)
+		paramNum += 1
 	}
 
-	err := r.Con.QueryRow(ctx, query, values...).Scan(&result)
+	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.ID, &result.Login, &result.Password, &result.Balance)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, false, nil
+		}
 		return nil, false, err
 	}
 
@@ -92,22 +108,38 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool,
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE users SET"
+	query := "UPDATE users"
 
+	paramNum := 1
 	if len(pars.Login) != 0 {
-		query += " AND login = $1"
+		query += fmt.Sprintf(" SET login = $%d", paramNum)
 		values = append(values, pars.Login)
+		paramNum++
 	}
 
 	if len(pars.Password) != 0 {
-		query += " AND password = $2"
+		if len(values) > 0 {
+			query += ","
+		} else {
+			query += " SET"
+		}
+		query += fmt.Sprintf(" password = $%d", paramNum)
 		values = append(values, pars.Password)
+		paramNum++
 	}
 
 	if pars.Balance != 0 {
-		query += " AND balance = $3"
+		if len(values) > 0 {
+			query += ","
+		} else {
+			query += " SET"
+		}
+		query += fmt.Sprintf(" balance = $%d", paramNum)
 		values = append(values, pars.Balance)
+		paramNum++
 	}
+
+	query += fmt.Sprintf(" WHERE id = '%s'", pars.ID)
 
 	_, err := r.Con.Exec(ctx, query, values...)
 
@@ -121,6 +153,7 @@ func (r *Repo) Delete(ctx context.Context, pars *model.GetPars) error {
 
 func (r *Repo) Exists(ctx context.Context, login string) (bool, error) {
 	var exist bool
+
 	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM users WHERE login = $1);", login).Scan(&exist)
 	if err != nil {
 		return false, err

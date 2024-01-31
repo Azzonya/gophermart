@@ -13,13 +13,15 @@ import (
 type Rest struct {
 	server       *http.Server
 	userHandlers *handler.UserHandlers
+	jwtSecret    string
 
 	ErrorChan chan error
 }
 
-func NewRest(userHandlers *handler.UserHandlers) *Rest {
+func NewRest(userHandlers *handler.UserHandlers, jwtSecret string) *Rest {
 	return &Rest{
 		userHandlers: userHandlers,
+		jwtSecret:    jwtSecret,
 
 		ErrorChan: make(chan error, 1),
 	}
@@ -29,6 +31,11 @@ func (o *Rest) Start(lAddr string) {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
+
+	r.Use(AuthMiddleware(o.jwtSecret),
+		CompressRequest(),
+		DecompressRequest(),
+		gin.Recovery())
 
 	o.SetRouters(r)
 
@@ -59,7 +66,7 @@ func (o *Rest) Stop(ctx context.Context) error {
 
 	err := o.server.Shutdown(ctx)
 	if err != nil {
-		slog.Error("http-server shutdown error", "error", err)
+		slog.Error("http-gw-server shutdown error", "error", err)
 		return err
 	}
 
@@ -74,5 +81,5 @@ func (o *Rest) SetRouters(r *gin.Engine) {
 	r.GET("/api/user/orders", o.userHandlers.GetOrders)
 	r.GET("/api/user/balance", o.userHandlers.GetBalance)
 	r.POST("/api/user/balance/withdraw", o.userHandlers.WithdrawBalance)
-	r.POST("/api/user/withdrawals", o.userHandlers.GetWithdrawals)
+	r.GET("/api/user/withdrawals", o.userHandlers.GetWithdrawals)
 }

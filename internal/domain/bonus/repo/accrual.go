@@ -1,6 +1,8 @@
 package accrual
 
-import "github.com/Azzonya/gophermart/internal/client/accrual"
+import (
+	"github.com/Azzonya/gophermart/internal/client/accrual"
+)
 
 type Repo struct {
 	client accrual.Client

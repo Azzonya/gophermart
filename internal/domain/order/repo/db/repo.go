@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
 	"github.com/Azzonya/gophermart/internal/domain/order/model"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,47 +23,71 @@ func New(con *pgxpool.Pool) *Repo {
 func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
 	var result []*model.Order
 	var values []interface{}
-	query := "SELECT * FROM orders WHERE true"
+	query := "SELECT code, uploaded_at, status, user_id FROM orders WHERE true"
 
+	paramNum := 1
 	if pars.UserID != nil {
-		query += " AND user_id = $1"
+		query += fmt.Sprintf(" AND user_id = $%d", paramNum)
 		values = append(values, *pars.UserID)
+		paramNum++
 	}
 
 	if pars.OrderNumber != nil {
-		query += " AND code = $2"
+		query += fmt.Sprintf(" AND code = $%d", paramNum)
 		values = append(values, *pars.OrderNumber)
+		paramNum++
 	}
 
 	if pars.UploadedBefore != nil {
-		query += " AND uploaded_at <= $3"
+		query += fmt.Sprintf(" AND uploaded_at <= $%d", paramNum)
 		values = append(values, *pars.UploadedBefore)
+		paramNum++
 	}
 
 	if pars.UploadedAfter != nil {
-		query += " AND uploaded_at >= $4"
+		query += fmt.Sprintf(" AND uploaded_at >= $%d", paramNum)
 		values = append(values, *pars.UploadedAfter)
+		paramNum++
 	}
 
 	if pars.Status != nil {
-		query += " AND status = $5"
+		query += fmt.Sprintf(" AND status = $%d", paramNum)
 		values = append(values, *pars.Status)
+		paramNum++
+	}
+
+	if pars.Statuses != nil && len(pars.Statuses) > 0 {
+		query += " AND status IN ("
+		for i, v := range pars.Statuses {
+			query += fmt.Sprintf("'%s'", v)
+			if i < len(pars.Statuses)-1 {
+				query += ","
+			}
+		}
+		query += ")"
+	}
+
+	if len(pars.OrderBy) != 0 {
+		query += fmt.Sprintf(" ORDER BY uploaded_at %s", pars.OrderBy)
 	}
 
 	rows, err := r.Con.Query(ctx, query, values...)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	defer rows.Close()
 	for rows.Next() {
-		var order *model.Order
+		var order model.Order
 		err = rows.Scan(&order.OrderNumber, &order.UploadedAt, &order.Status, &order.UserID)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, order)
+		result = append(result, &order)
 	}
 
 	return result, err
@@ -76,47 +103,65 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool
 	var result model.Order
 	query := "SELECT * FROM orders WHERE true"
 
+	paramNum := 1
 	if len(pars.UserID) != 0 {
-		query += " AND user_id = $1"
+		query += fmt.Sprintf(" AND user_id = $%d", paramNum)
 		values = append(values, pars.UserID)
+		paramNum += 1
 	}
 
 	if len(pars.OrderNumber) != 0 {
-		query += " AND code = $2"
+		query += fmt.Sprintf(" AND code = $%d", paramNum)
 		values = append(values, pars.OrderNumber)
+		paramNum += 1
 	}
 
 	if len(pars.Status) != 0 {
-		query += " AND status = $3"
+		query += fmt.Sprintf(" AND status = $%d", paramNum)
 		values = append(values, pars.Status)
+		paramNum += 1
 	}
 
 	if len(pars.UserID) != 0 {
-		query += " AND user_id >= $4"
+		query += fmt.Sprintf(" AND user_id >= $%d", paramNum)
 		values = append(values, pars.UserID)
+		paramNum += 1
 	}
-	err := r.Con.QueryRow(ctx, query, values...).Scan(&result)
+	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.OrderNumber, &result.UploadedAt, &result.Status, &result.UserID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, false, nil
+		}
 		return nil, false, err
 	}
 
-	return &result, result.OrderNumber != "", err
+	return &result, result.OrderNumber != "", nil
 }
 
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE orders SET"
+	query := "UPDATE orders"
 
+	paramNum := 1
 	if len(pars.UserID) != 0 {
-		query += " AND user_id = $1"
+		query += fmt.Sprintf(" SET user_id = $%d", paramNum)
 		values = append(values, pars.UserID)
+		paramNum++
 	}
 
 	if len(pars.Status) != 0 {
-		query += " AND status = $2"
+		if len(values) > 0 {
+			query += ","
+		} else {
+			query += " SET"
+		}
+		query += fmt.Sprintf(" status = $%d", paramNum)
 		values = append(values, pars.Status)
+		paramNum++
 	}
+
+	query += fmt.Sprintf(" WHERE code = '%s'", pars.OrderNumber)
 
 	_, err := r.Con.Exec(ctx, query, values...)
 

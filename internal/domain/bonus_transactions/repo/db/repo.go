@@ -2,8 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
 	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -22,29 +25,45 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTr
 	var values []interface{}
 	query := "SELECT * FROM bonus_transactions WHERE true"
 
-	if !pars.ProcessedAfter.IsZero() {
-		query += " AND processed_at >= $1"
+	paramNum := 1
+	if pars.ProcessedAfter != nil && !pars.ProcessedAfter.IsZero() {
+		query += fmt.Sprintf(" AND processed_at >= $%d", paramNum)
 		values = append(values, pars.ProcessedAfter)
+		paramNum += 1
 	}
 
-	if !pars.ProcessedBefore.IsZero() {
-		query += " AND processed_at <= $2"
+	if pars.ProcessedBefore != nil && !pars.ProcessedBefore.IsZero() {
+		query += fmt.Sprintf(" AND processed_at <= $%d", paramNum)
 		values = append(values, pars.ProcessedBefore)
+		paramNum += 1
 	}
 
-	if pars.TransactionType != nil {
-		query += " AND transaction_type = $3"
-		values = append(values, *pars.TransactionType)
+	if pars.TransactionType != "" {
+		query += fmt.Sprintf(" AND transaction_type = $%d", paramNum)
+		values = append(values, pars.TransactionType)
+		paramNum += 1
 	}
 
 	if pars.MaxSum != nil {
-		query += " AND sum <= $4"
+		query += fmt.Sprintf(" AND sum <= $%d", paramNum)
 		values = append(values, *pars.MaxSum)
+		paramNum += 1
 	}
 
 	if pars.MinSum != nil {
-		query += " AND sum >= $5"
+		query += fmt.Sprintf(" AND sum >= $%d", paramNum)
 		values = append(values, *pars.MinSum)
+		paramNum += 1
+	}
+
+	if pars.UserID != nil {
+		query += fmt.Sprintf(" AND user_id >= $%d", paramNum)
+		values = append(values, *pars.UserID)
+		paramNum += 1
+	}
+
+	if len(pars.OrderBy) != 0 {
+		query += fmt.Sprintf(" ORDER BY processed_at %s", pars.OrderBy)
 	}
 
 	rows, err := r.Con.Query(ctx, query, values...)
@@ -54,20 +73,23 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTr
 
 	defer rows.Close()
 	for rows.Next() {
-		var bonusTransaction *model.BonusTransaction
+		bonusTransaction := model.BonusTransaction{}
 		err = rows.Scan(&bonusTransaction.OrderNumber, &bonusTransaction.UserID, &bonusTransaction.ProcessedAt, &bonusTransaction.TransactionType, &bonusTransaction.Sum)
 		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, nil
+			}
 			return nil, err
 		}
 
-		result = append(result, bonusTransaction)
+		result = append(result, &bonusTransaction)
 	}
 
 	return result, err
 }
 
 func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
-	_, err := r.Con.Exec(ctx, "INSERT INTO bonus_transactions (order_code, user_id, transacton_type, sum) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
+	_, err := r.Con.Exec(ctx, "INSERT INTO bonus_transactions (order_code, user_id, transaction_type, sum) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
 	return err
 }
 
@@ -76,32 +98,38 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransa
 	var result model.BonusTransaction
 	query := "SELECT * FROM bonus_transactions WHERE true"
 
+	paramNum := 1
 	if len(pars.OrderNumber) != 0 {
-		query += " AND sum = $1"
+		query += fmt.Sprintf(" AND sum = $%d", paramNum)
 		values = append(values, pars.Sum)
+		paramNum += 1
 	}
 
 	if !pars.ProcessedAt.IsZero() {
-		query += " AND processed_at = $2"
+		query += fmt.Sprintf(" AND processed_at = $%d", paramNum)
 		values = append(values, pars.ProcessedAt)
+		paramNum += 1
 	}
 
 	if pars.Sum != 0 {
-		query += " AND sum = $3"
+		query += fmt.Sprintf(" AND order_code = $%d", paramNum)
 		values = append(values, pars.Sum)
+		paramNum += 1
 	}
 
 	if len(pars.TransactionType) != 0 {
-		query += " AND transaction_type = $4"
+		query += fmt.Sprintf(" AND transaction_type = $%d", paramNum)
 		values = append(values, pars.TransactionType)
+		paramNum += 1
 	}
 
-	if pars.UserID != 0 {
-		query += " AND user_id = $5"
+	if len(pars.UserID) != 0 {
+		query += fmt.Sprintf(" AND user_id = $%d", paramNum)
 		values = append(values, pars.UserID)
+		paramNum += 1
 	}
 
-	err := r.Con.QueryRow(ctx, query, values...).Scan(&result)
+	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.OrderNumber, &result.UserID, &result.ProcessedAt, &result.TransactionType, &result.Sum)
 	if err != nil {
 		return nil, false, err
 	}
@@ -112,27 +140,49 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransa
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE bonus_transactions SET 1=1"
+	query := "UPDATE bonus_transactions"
 
+	paramNum := 1
 	if !pars.ProcessedAt.IsZero() {
-		query += " AND processed_at = $1"
+		query += fmt.Sprintf(" SET processed_at = $%d", paramNum)
 		values = append(values, pars.ProcessedAt)
+		paramNum++
 	}
 
-	if pars.Sum != 0 {
-		query += " AND sum = $2"
+	if pars.Sum >= 0 {
+		if len(values) > 0 {
+			query += ","
+		} else {
+			query += " SET"
+		}
+		query += fmt.Sprintf(" SET sum = $%d", paramNum)
 		values = append(values, pars.Sum)
+		paramNum++
 	}
 
 	if len(pars.TransactionType) != 0 {
-		query += " AND transaction_type = $3"
+		if len(values) > 0 {
+			query += ","
+		} else {
+			query += " SET"
+		}
+		query += fmt.Sprintf(" SET transaction_type = $%d", paramNum)
 		values = append(values, pars.TransactionType)
+		paramNum++
 	}
 
-	if pars.UserID != 0 {
-		query += " AND user_id = $4"
+	if len(pars.UserID) != 0 {
+		if len(values) > 0 {
+			query += ","
+		} else {
+			query += " SET"
+		}
+		query += fmt.Sprintf(" SET user_id = $%d", paramNum)
 		values = append(values, pars.UserID)
+		paramNum++
 	}
+
+	query += fmt.Sprintf(" WHERE order_code = '%s'", pars.OrderNumber)
 
 	_, err := r.Con.Exec(ctx, query, values...)
 

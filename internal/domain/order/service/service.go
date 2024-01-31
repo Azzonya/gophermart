@@ -2,17 +2,29 @@ package service
 
 import (
 	"context"
+	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
 	"github.com/Azzonya/gophermart/internal/domain/order/model"
+	bonus_transactions "github.com/Azzonya/gophermart/internal/usecase/bonus_transactions"
 	"strconv"
+	"time"
 )
 
 type Service struct {
-	repoDb RepoDbI
+	repoDb                   RepoDbI
+	bonusTransactionsService bonus_transactions.WithdrawalServiceI
 }
 
-func (s *Service) isLuhnValid(orderNumber string) bool {
+func New(repoDb RepoDbI, bonusTransactionsService bonus_transactions.WithdrawalServiceI) *Service {
+	return &Service{
+		repoDb:                   repoDb,
+		bonusTransactionsService: bonusTransactionsService,
+	}
+}
+
+func (s *Service) IsLuhnValid(orderNumber string) bool {
 	// Преобразование строки в массив цифр
 	digits := make([]int, len(orderNumber))
+
 	for i, char := range orderNumber {
 		digit, err := strconv.Atoi(string(char))
 		if err != nil {
@@ -29,6 +41,7 @@ func (s *Service) isLuhnValid(orderNumber string) bool {
 			digits[i] -= 9
 		}
 	}
+
 	for _, digit := range digits {
 		total += digit
 	}
@@ -40,6 +53,50 @@ func (s *Service) List(ctx context.Context, pars *model.ListPars) ([]*model.Orde
 	return s.repoDb.List(ctx, pars)
 }
 
+func (s *Service) ListWithAccrual(ctx context.Context, pars *model.ListPars) ([]*model.OrderWithAccrual, error) {
+	orders, err := s.repoDb.List(ctx, pars)
+	if err != nil {
+		return nil, err
+	}
+
+	orderMap := make(map[string]model.Order)
+	for _, order := range orders {
+		orderMap[order.OrderNumber] = *order
+	}
+
+	bonusTransactions, err := s.bonusTransactionsService.List(ctx, &bonus_transactionsModel.ListPars{
+		UserID:          pars.UserID,
+		TransactionType: bonus_transactionsModel.Accrual,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	bonusMap := make(map[string]bonus_transactionsModel.BonusTransaction)
+	for _, bonus := range bonusTransactions {
+		bonusMap[bonus.OrderNumber] = *bonus
+	}
+
+	var result []*model.OrderWithAccrual
+	for _, order := range orders {
+		bonusTransaction, exists := bonusMap[order.OrderNumber]
+
+		accrualSum := 0
+		if exists {
+			accrualSum = bonusTransaction.Sum
+		}
+
+		result = append(result, &model.OrderWithAccrual{
+			OrderNumber: order.OrderNumber,
+			Status:      order.Status,
+			Accrual:     accrualSum,
+			UploadedAt:  order.UploadedAt.Format(time.RFC3339),
+		})
+	}
+
+	return result, nil
+}
+
 func (s *Service) Create(ctx context.Context, obj *model.GetPars) error {
 	return s.repoDb.Create(ctx, obj)
 }
@@ -48,8 +105,8 @@ func (s *Service) Get(ctx context.Context, pars *model.GetPars) (*model.Order, b
 	return s.repoDb.Get(ctx, pars)
 }
 
-func (s *Service) Update(ctx context.Context, pars *model.GetPars, obj *model.GetPars) error {
-	return s.repoDb.Update(ctx, pars, obj)
+func (s *Service) Update(ctx context.Context, pars *model.GetPars) error {
+	return s.repoDb.Update(ctx, pars)
 }
 
 func (s *Service) Delete(ctx context.Context, pars *model.GetPars) error {

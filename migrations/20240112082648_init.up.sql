@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
                                      id SERIAL PRIMARY KEY,
                                      login VARCHAR(255) NOT NULL UNIQUE,
-                                     password VARCHAR(255) NOT NULL DEFAULT ''
+                                     password VARCHAR(255) NOT NULL DEFAULT '',
+                                     balance INT NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_user_login ON users (login);
