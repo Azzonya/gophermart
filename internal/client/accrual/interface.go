@@ -1,7 +1,7 @@
 package accrual
 
 import (
-	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http-gw"
+	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http"
 )
 
 type Client interface {

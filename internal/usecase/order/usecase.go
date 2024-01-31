@@ -35,14 +35,14 @@ func (u *Usecase) Create(ctx context.Context, obj *model.GetPars) error {
 	return u.srv.Create(ctx, obj)
 }
 
-func (s *Usecase) Update(ctx context.Context, pars *model.GetPars) error {
-	return s.srv.Update(ctx, pars)
+func (u *Usecase) Update(ctx context.Context, pars *model.GetPars) error {
+	return u.srv.Update(ctx, pars)
 }
 
-func (s *Usecase) Delete(ctx context.Context, pars *model.GetPars) error {
-	return s.srv.Delete(ctx, pars)
+func (u *Usecase) Delete(ctx context.Context, pars *model.GetPars) error {
+	return u.srv.Delete(ctx, pars)
 }
 
-func (s *Usecase) Exists(ctx context.Context, orderNumber string) (bool, error) {
-	return s.srv.Exists(ctx, orderNumber)
+func (u *Usecase) Exists(ctx context.Context, orderNumber string) (bool, error) {
+	return u.srv.Exists(ctx, orderNumber)
 }

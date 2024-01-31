@@ -1,4 +1,4 @@
-package http_gw
+package http
 
 import (
 	"encoding/json"

@@ -1,8 +1,8 @@
-package bonus_transactions
+package bonusTransactions
 
 import (
 	"context"
-	"github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
+	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 )
 
 type WithdrawalServiceI interface {

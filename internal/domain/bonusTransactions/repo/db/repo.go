@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
+	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -140,7 +140,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransa
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
 
-	query := "UPDATE bonus_transactions"
+	query := "UPDATE bonusTransactions"
 
 	paramNum := 1
 	if !pars.ProcessedAt.IsZero() {

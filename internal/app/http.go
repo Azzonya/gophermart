@@ -66,7 +66,7 @@ func (o *Rest) Stop(ctx context.Context) error {
 
 	err := o.server.Shutdown(ctx)
 	if err != nil {
-		slog.Error("http-gw-server shutdown error", "error", err)
+		slog.Error("http-server shutdown error", "error", err)
 		return err
 	}
 

@@ -5,7 +5,7 @@ import (
 	"github.com/Azzonya/gophermart/internal/domain/user/model"
 )
 
-type RepoDbI interface {
+type repoDBI interface {
 	List(ctx context.Context, pars *model.ListPars) ([]*model.User, error)
 	Create(ctx context.Context, obj *model.GetPars) error
 	Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error)

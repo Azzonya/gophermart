@@ -2,20 +2,20 @@ package service
 
 import (
 	"context"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
+	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	"github.com/Azzonya/gophermart/internal/domain/user/model"
-	"github.com/Azzonya/gophermart/internal/usecase/bonus_transactions"
+	"github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repoDb                   RepoDbI
-	bonusTransactionsService bonus_transactions.WithdrawalServiceI
+	repoDB                   repoDBI
+	bonusTransactionsService bonusTransactions.WithdrawalServiceI
 }
 
-func New(repoDb RepoDbI, bonusTransactionsService bonus_transactions.WithdrawalServiceI) *Service {
+func New(repoDB repoDBI, bonusTransactionsService bonusTransactions.WithdrawalServiceI) *Service {
 	return &Service{
-		repoDb:                   repoDb,
+		repoDB:                   repoDB,
 		bonusTransactionsService: bonusTransactionsService,
 	}
 }
@@ -37,7 +37,7 @@ func (s *Service) HashPassword(password string) (string, error) {
 }
 
 func (s *Service) IsLoginTaken(ctx context.Context, login string) (bool, error) {
-	return s.repoDb.Exists(ctx, login)
+	return s.repoDB.Exists(ctx, login)
 }
 
 func (s *Service) Register(ctx context.Context, user *model.GetPars) (*model.User, error) {
@@ -47,12 +47,12 @@ func (s *Service) Register(ctx context.Context, user *model.GetPars) (*model.Use
 		return nil, err
 	}
 
-	err = s.repoDb.Create(ctx, user)
+	err = s.repoDB.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
-	u, _, err := s.repoDb.Get(ctx, &model.GetPars{
+	u, _, err := s.repoDB.Get(ctx, &model.GetPars{
 		Login: user.Login,
 	})
 	if err != nil {
@@ -68,13 +68,16 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *model.GetPa
 		return nil, err
 	}
 
-	bonusTransactions, err := s.bonusTransactionsService.List(ctx, &bonus_transactionsModel.ListPars{
+	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &bonus_transactionsModel.ListPars{
 		UserID:          &pars.ID,
 		TransactionType: bonus_transactionsModel.Debit,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	withdrawn := 0
-	for _, v := range bonusTransactions {
+	for _, v := range bonusTransactionsList {
 		withdrawn += v.Sum
 	}
 
@@ -85,25 +88,25 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *model.GetPa
 }
 
 func (s *Service) List(ctx context.Context, pars *model.ListPars) ([]*model.User, error) {
-	return s.repoDb.List(ctx, pars)
+	return s.repoDB.List(ctx, pars)
 }
 
 func (s *Service) Create(ctx context.Context, obj *model.GetPars) error {
-	return s.repoDb.Create(ctx, obj)
+	return s.repoDB.Create(ctx, obj)
 }
 
 func (s *Service) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error) {
-	return s.repoDb.Get(ctx, pars)
+	return s.repoDB.Get(ctx, pars)
 }
 
 func (s *Service) Update(ctx context.Context, pars *model.GetPars) error {
-	return s.repoDb.Update(ctx, pars)
+	return s.repoDB.Update(ctx, pars)
 }
 
 func (s *Service) Delete(ctx context.Context, pars *model.GetPars) error {
-	return s.repoDb.Delete(ctx, pars)
+	return s.repoDB.Delete(ctx, pars)
 }
 
 func (s *Service) Exists(ctx context.Context, orderNumber string) (bool, error) {
-	return s.repoDb.Exists(ctx, orderNumber)
+	return s.repoDB.Exists(ctx, orderNumber)
 }

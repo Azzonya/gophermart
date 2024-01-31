@@ -1,4 +1,4 @@
-package http_gw
+package http
 
 type RequestResult struct {
 	Order   string `json:"order"`

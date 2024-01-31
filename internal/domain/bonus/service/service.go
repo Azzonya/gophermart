@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
+	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order/model"
-	"github.com/Azzonya/gophermart/internal/usecase/bonus_transactions"
+	"github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"sync"
 	"time"
@@ -13,12 +13,12 @@ import (
 
 type Service struct {
 	repoAccrual              RepoAccrualI
-	bonusTransactionsService bonus_transactions.WithdrawalServiceI
+	bonusTransactionsService bonusTransactions.WithdrawalServiceI
 	orderService             order.OrderServiceI
 	Wg                       sync.WaitGroup
 }
 
-func New(repoAccrual RepoAccrualI, bonusTransactionsService bonus_transactions.WithdrawalServiceI, orderService order.OrderServiceI) *Service {
+func New(repoAccrual RepoAccrualI, bonusTransactionsService bonusTransactions.WithdrawalServiceI, orderService order.OrderServiceI) *Service {
 	return &Service{
 		repoAccrual:              repoAccrual,
 		bonusTransactionsService: bonusTransactionsService,
@@ -29,17 +29,11 @@ func New(repoAccrual RepoAccrualI, bonusTransactionsService bonus_transactions.W
 func (s *Service) Start(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 
-	// Функция, которая будет вызываться при каждом тике таймера
 	go func() {
-		defer ticker.Stop() // Отложенная остановка таймера при завершении горутины
-		for {
-			select {
-			case <-ticker.C:
-				// Увеличиваем счетчик горутин перед созданием новой
-				s.Wg.Add(1)
-				// Вызываем функцию отправки GET-запроса
-				go s.UpdateAccrualInfo(context.Background())
-			}
+		defer ticker.Stop()
+		for range time.Tick(interval) {
+			s.Wg.Add(1)
+			go s.UpdateAccrualInfo(context.Background())
 		}
 	}()
 
@@ -76,12 +70,15 @@ func (s *Service) UpdateAccrualInfo(ctx context.Context) error {
 			})
 		}
 
-		bonus_transaction, exist, err := s.bonusTransactionsService.Get(ctx, &bonus_transactionsModel.GetPars{
+		bonusTransactionFound, exist, err := s.bonusTransactionsService.Get(ctx, &bonus_transactionsModel.GetPars{
 			OrderNumber:     v.OrderNumber,
 			TransactionType: bonus_transactionsModel.Accrual,
 		})
+		if err != nil {
+			return err
+		}
 		if exist {
-			if bonus_transaction.Sum != responseResult.Accrual {
+			if bonusTransactionFound.Sum != responseResult.Accrual {
 				err = s.bonusTransactionsService.Update(ctx, &bonus_transactionsModel.GetPars{
 					OrderNumber: v.OrderNumber,
 					Sum:         responseResult.Accrual,

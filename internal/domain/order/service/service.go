@@ -2,21 +2,21 @@ package service
 
 import (
 	"context"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
+	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 	"github.com/Azzonya/gophermart/internal/domain/order/model"
-	bonus_transactions "github.com/Azzonya/gophermart/internal/usecase/bonus_transactions"
+	bonus_transactions "github.com/Azzonya/gophermart/internal/usecase/bonusTransactions"
 	"strconv"
 	"time"
 )
 
 type Service struct {
-	repoDb                   RepoDbI
+	repoDB                   RepoDBI
 	bonusTransactionsService bonus_transactions.WithdrawalServiceI
 }
 
-func New(repoDb RepoDbI, bonusTransactionsService bonus_transactions.WithdrawalServiceI) *Service {
+func New(repoDB RepoDBI, bonusTransactionsService bonus_transactions.WithdrawalServiceI) *Service {
 	return &Service{
-		repoDb:                   repoDb,
+		repoDB:                   repoDB,
 		bonusTransactionsService: bonusTransactionsService,
 	}
 }
@@ -50,11 +50,11 @@ func (s *Service) IsLuhnValid(orderNumber string) bool {
 }
 
 func (s *Service) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
-	return s.repoDb.List(ctx, pars)
+	return s.repoDB.List(ctx, pars)
 }
 
 func (s *Service) ListWithAccrual(ctx context.Context, pars *model.ListPars) ([]*model.OrderWithAccrual, error) {
-	orders, err := s.repoDb.List(ctx, pars)
+	orders, err := s.repoDB.List(ctx, pars)
 	if err != nil {
 		return nil, err
 	}
@@ -98,21 +98,21 @@ func (s *Service) ListWithAccrual(ctx context.Context, pars *model.ListPars) ([]
 }
 
 func (s *Service) Create(ctx context.Context, obj *model.GetPars) error {
-	return s.repoDb.Create(ctx, obj)
+	return s.repoDB.Create(ctx, obj)
 }
 
 func (s *Service) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool, error) {
-	return s.repoDb.Get(ctx, pars)
+	return s.repoDB.Get(ctx, pars)
 }
 
 func (s *Service) Update(ctx context.Context, pars *model.GetPars) error {
-	return s.repoDb.Update(ctx, pars)
+	return s.repoDB.Update(ctx, pars)
 }
 
 func (s *Service) Delete(ctx context.Context, pars *model.GetPars) error {
-	return s.repoDb.Delete(ctx, pars)
+	return s.repoDB.Delete(ctx, pars)
 }
 
 func (s *Service) Exists(ctx context.Context, orderNumber string) (bool, error) {
-	return s.repoDb.Exists(ctx, orderNumber)
+	return s.repoDB.Exists(ctx, orderNumber)
 }

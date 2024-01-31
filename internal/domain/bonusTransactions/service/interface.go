@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/Azzonya/gophermart/internal/domain/bonus_transactions/model"
+	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
 )
 
-type RepoDbI interface {
+type RepoDBI interface {
 	List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTransaction, error)
 	Create(ctx context.Context, obj *model.GetPars) error
 	Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransaction, bool, error)
