@@ -199,6 +199,8 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {
 	// Реализация получения списка заказов пользователя
+	c.Header("Content-Type", "application/json")
+
 	userID, err := u.auth.GetUserIDFromCookie(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -225,12 +227,13 @@ func (u *UserHandlers) GetOrders(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Type", "application/json")
 	c.JSON(http.StatusOK, orders)
 }
 
 func (u *UserHandlers) GetBalance(c *gin.Context) {
 	// Реализация получения баланса баллов лояльности пользователя
+	c.Header("Content-Type", "application/json")
+
 	userID, err := u.auth.GetUserIDFromCookie(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -251,7 +254,6 @@ func (u *UserHandlers) GetBalance(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Type", "application/json")
 	c.JSON(http.StatusOK, result)
 }
 
