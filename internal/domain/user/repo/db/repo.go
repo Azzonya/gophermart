@@ -23,6 +23,8 @@ func New(con *pgxpool.Pool) *Repo {
 func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, error) {
 	var result []*model.User
 	var values []interface{}
+	values = make([]interface{}, 0)
+
 	query := "SELECT * FROM users WHERE true"
 
 	if pars.Login != nil {
@@ -67,6 +69,8 @@ func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
 func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error) {
 	var values []interface{}
 	var result model.User
+	values = make([]interface{}, 0)
+
 	query := "SELECT * FROM users WHERE true"
 
 	paramNum := 1
@@ -107,6 +111,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool,
 
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
+	values = make([]interface{}, 0)
 
 	query := "UPDATE users"
 

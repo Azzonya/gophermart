@@ -23,6 +23,8 @@ func New(con *pgxpool.Pool) *Repo {
 func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
 	var result []*model.Order
 	var values []interface{}
+	values = make([]interface{}, 0)
+
 	query := "SELECT code, uploaded_at, status, user_id FROM orders WHERE true"
 
 	paramNum := 1
@@ -101,6 +103,8 @@ func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
 func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool, error) {
 	var values []interface{}
 	var result model.Order
+	values = make([]interface{}, 0)
+
 	query := "SELECT * FROM orders WHERE true"
 
 	paramNum := 1
@@ -140,6 +144,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool
 
 func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	var values []interface{}
+	values = make([]interface{}, 0)
 
 	query := "UPDATE orders"
 
