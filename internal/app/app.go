@@ -8,7 +8,6 @@ import (
 	"github.com/Azzonya/gophermart/internal/config"
 	bonusService "github.com/Azzonya/gophermart/internal/domain/bonus/service"
 	bonusTransactionsRepo "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/repo/db"
-	WithdrawalService "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/service"
 	bonusTransactionsService "github.com/Azzonya/gophermart/internal/domain/bonus_transactions/service"
 	orderRepo "github.com/Azzonya/gophermart/internal/domain/order/repo/db"
 	OrderService "github.com/Azzonya/gophermart/internal/domain/order/service"
@@ -41,7 +40,7 @@ type App struct {
 	orderService *OrderService.Service
 
 	// bonus_transactions
-	bonusTransactionsService *WithdrawalService.Service
+	bonusTransactionsService *bonusTransactionsService.Service
 
 	// handlers
 	userHandlers *handler.UserHandlers
