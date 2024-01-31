@@ -22,25 +22,23 @@ func New(con *pgxpool.Pool) *Repo {
 
 func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, error) {
 	var result []*model.User
-	var values []interface{} = make([]interface{}, 0)
+	var values = make([]interface{}, 0)
 
 	query := "SELECT * FROM users WHERE true"
 
-	if pars != nil {
-		if pars.Login != nil {
-			query += " AND login = $1"
-			values = append(values, *pars.Login)
-		}
+	if pars.Login != nil {
+		query += " AND login = $1"
+		values = append(values, *pars.Login)
+	}
 
-		if pars.MaxBalance != nil {
-			query += " AND balance <= $2"
-			values = append(values, *pars.MaxBalance)
-		}
+	if pars.MaxBalance != nil {
+		query += " AND balance <= $2"
+		values = append(values, *pars.MaxBalance)
+	}
 
-		if pars.MinBalance != nil {
-			query += " AND balance <= $3"
-			values = append(values, *pars.MinBalance)
-		}
+	if pars.MinBalance != nil {
+		query += " AND balance <= $3"
+		values = append(values, *pars.MinBalance)
 	}
 
 	rows, err := r.Con.Query(ctx, query, values...)
@@ -50,13 +48,13 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, e
 
 	defer rows.Close()
 	for rows.Next() {
-		var user *model.User
+		var user model.User
 		err = rows.Scan(&user.ID, &user.Login, &user.Password, &user.Balance)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, user)
+		result = append(result, &user)
 	}
 
 	return result, err
