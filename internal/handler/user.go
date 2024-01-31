@@ -8,6 +8,8 @@ import (
 )
 
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
+	c.Header("Content-Type", "application/json")
+
 	var err error
 	req := &userModel.GetPars{}
 
@@ -58,6 +60,8 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 func (u *UserHandlers) LoginUser(c *gin.Context) {
 	// Реализация аутентификации пользователя
+	c.Header("Content-Type", "application/json")
+
 	var err error
 	req := &userModel.GetPars{}
 
