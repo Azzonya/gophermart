@@ -22,8 +22,7 @@ func New(con *pgxpool.Pool) *Repo {
 
 func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, error) {
 	var result []*model.User
-	var values []interface{}
-	values = make([]interface{}, 0)
+	var values []interface{} = make([]interface{}, 0)
 
 	query := "SELECT * FROM users WHERE true"
 
