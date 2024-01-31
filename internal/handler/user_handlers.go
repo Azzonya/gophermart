@@ -225,6 +225,7 @@ func (u *UserHandlers) GetOrders(c *gin.Context) {
 		return
 	}
 
+	c.Header("Content-Type", "application/json")
 	c.JSON(http.StatusOK, orders)
 }
 
@@ -250,6 +251,7 @@ func (u *UserHandlers) GetBalance(c *gin.Context) {
 		return
 	}
 
+	c.Header("Content-Type", "application/json")
 	c.JSON(http.StatusOK, result)
 }
 
