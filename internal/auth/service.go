@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	sessionCookie              = "userID"
+	sessionCookie              = "jwt"
 	defaultJWTCookieExpiration = 24 * time.Hour
 )
 

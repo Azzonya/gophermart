@@ -77,9 +77,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	//c.Header("Set-Cookie", sessionCookie.String())
-	c.SetCookie("jwt", sessionCookie.String(), int(sessionCookie.Expires.Second()), "/", "", false, true)
-
+	c.Header("Set-Cookie", sessionCookie.String())
 	c.JSON(http.StatusOK, nil)
 }
 
