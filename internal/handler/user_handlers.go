@@ -186,6 +186,13 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 		Status:      orderModel.OrderStatusNew,
 		UserID:      userID,
 	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to create order",
+			"error":   err.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, nil)
 }
@@ -335,6 +342,13 @@ func (u *UserHandlers) GetWithdrawals(c *gin.Context) {
 		TransactionType: bonusTransactionsModel.Debit,
 		OrderBy:         "ASC",
 	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to lost transactions",
+			"error":   err.Error(),
+		})
+		return
+	}
 
 	if len(withdrawals) == 0 {
 		c.JSON(http.StatusNoContent, gin.H{
