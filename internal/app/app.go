@@ -8,11 +8,8 @@ import (
 	"github.com/Azzonya/gophermart/internal/domain/auth"
 	bonusService "github.com/Azzonya/gophermart/internal/domain/bonus"
 	bonusTransactionsService "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
-	bonusTransactionsRepo "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/repo"
 	orderService "github.com/Azzonya/gophermart/internal/domain/order"
-	orderRepo "github.com/Azzonya/gophermart/internal/domain/order/repo"
 	userService "github.com/Azzonya/gophermart/internal/domain/user"
-	userRepo "github.com/Azzonya/gophermart/internal/domain/user/repo"
 	"github.com/Azzonya/gophermart/internal/handler"
 	bonusTransactionsUsecase "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	orderUsecase "github.com/Azzonya/gophermart/internal/usecase/order"
@@ -70,17 +67,17 @@ func (a *App) Init() {
 		authorizer := auth.New(config.Conf.JwtSecret)
 
 		//bonus transaction
-		bonusTransactionsRepoV := bonusTransactionsRepo.New(a.pgpool)
+		bonusTransactionsRepoV := bonusTransactionsService.NewRepo(a.pgpool)
 		a.bonusTransactionsService = bonusTransactionsService.New(bonusTransactionsRepoV)
 		bonusTransactionsUsecaseV := bonusTransactionsUsecase.New(a.bonusTransactionsService)
 
 		//user
-		userRepoV := userRepo.New(a.pgpool)
+		userRepoV := userService.NewRepo(a.pgpool)
 		a.userService = userService.New(userRepoV, a.bonusTransactionsService)
 		userUsecaseV := userUsecase.New(a.userService)
 
 		//order
-		orderRepoV := orderRepo.New(a.pgpool)
+		orderRepoV := orderService.NewRepo(a.pgpool)
 		a.orderService = orderService.New(orderRepoV, a.bonusTransactionsService)
 		orderUsecaseV := orderUsecase.New(a.orderService)
 

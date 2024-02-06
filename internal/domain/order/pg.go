@@ -1,10 +1,9 @@
-package repo
+package order
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/domain/order"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,14 +12,14 @@ type Repo struct {
 	Con *pgxpool.Pool
 }
 
-func New(con *pgxpool.Pool) *Repo {
+func NewRepo(con *pgxpool.Pool) *Repo {
 	return &Repo{
 		con,
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *order.ListPars) ([]*order.Order, error) {
-	var result []*order.Order
+func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
+	var result []*Order
 	var values []interface{}
 	values = make([]interface{}, 0)
 
@@ -82,7 +81,7 @@ func (r *Repo) List(ctx context.Context, pars *order.ListPars) ([]*order.Order, 
 
 	defer rows.Close()
 	for rows.Next() {
-		var orderFound order.Order
+		var orderFound Order
 		err = rows.Scan(&orderFound.OrderNumber, &orderFound.UploadedAt, &orderFound.Status, &orderFound.UserID)
 		if err != nil {
 			return nil, err
@@ -94,14 +93,14 @@ func (r *Repo) List(ctx context.Context, pars *order.ListPars) ([]*order.Order, 
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *order.GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO orders (code, status, user_id) VALUES ($1, $2, $3);", obj.OrderNumber, obj.Status, obj.UserID)
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *order.GetPars) (*order.Order, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, bool, error) {
 	var values []interface{}
-	var result order.Order
+	var result Order
 	values = make([]interface{}, 0)
 
 	query := "SELECT * FROM orders WHERE true"
@@ -141,7 +140,7 @@ func (r *Repo) Get(ctx context.Context, pars *order.GetPars) (*order.Order, bool
 	return &result, result.OrderNumber != "", nil
 }
 
-func (r *Repo) Update(ctx context.Context, pars *order.GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 	var values []interface{}
 	values = make([]interface{}, 0)
 
@@ -172,7 +171,7 @@ func (r *Repo) Update(ctx context.Context, pars *order.GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *order.GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 	_, err := r.Con.Exec(ctx, "DELETE FROM orders WHERE code = $1;", pars.OrderNumber)
 	return err
 }

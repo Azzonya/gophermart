@@ -1,10 +1,9 @@
-package repo
+package user
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,14 +12,14 @@ type Repo struct {
 	Con *pgxpool.Pool
 }
 
-func New(con *pgxpool.Pool) *Repo {
+func NewRepo(con *pgxpool.Pool) *Repo {
 	return &Repo{
 		con,
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *user.ListPars) ([]*user.User, error) {
-	var result []*user.User
+func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
+	var result []*User
 	var values = make([]interface{}, 0)
 
 	query := "SELECT * FROM users WHERE true"
@@ -47,7 +46,7 @@ func (r *Repo) List(ctx context.Context, pars *user.ListPars) ([]*user.User, err
 
 	defer rows.Close()
 	for rows.Next() {
-		var userFound user.User
+		var userFound User
 		err = rows.Scan(&userFound.ID, &userFound.Login, &userFound.Password, &userFound.Balance)
 		if err != nil {
 			return nil, err
@@ -59,14 +58,14 @@ func (r *Repo) List(ctx context.Context, pars *user.ListPars) ([]*user.User, err
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *user.GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *user.GetPars) (*user.User, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, bool, error) {
 	var values []interface{}
-	var result user.User
+	var result User
 	values = make([]interface{}, 0)
 
 	query := "SELECT * FROM users WHERE true"
@@ -107,7 +106,7 @@ func (r *Repo) Get(ctx context.Context, pars *user.GetPars) (*user.User, bool, e
 	return &result, result.Login != "", err
 }
 
-func (r *Repo) Update(ctx context.Context, pars *user.GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 	var values []interface{}
 	values = make([]interface{}, 0)
 
@@ -149,7 +148,7 @@ func (r *Repo) Update(ctx context.Context, pars *user.GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *user.GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 	_, err := r.Con.Exec(ctx, "DELETE FROM users WHERE login = $1;", pars.Login)
 	return err
 }

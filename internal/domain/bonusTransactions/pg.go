@@ -1,10 +1,9 @@
-package repo
+package bonusTransactions
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,14 +12,14 @@ type Repo struct {
 	Con *pgxpool.Pool
 }
 
-func New(con *pgxpool.Pool) *Repo {
+func NewRepo(con *pgxpool.Pool) *Repo {
 	return &Repo{
 		con,
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*bonusTransactions.BonusTransaction, error) {
-	var result []*bonusTransactions.BonusTransaction
+func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, error) {
+	var result []*BonusTransaction
 	var values []interface{}
 	query := "SELECT * FROM bonus_transactions WHERE true"
 
@@ -72,7 +71,7 @@ func (r *Repo) List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*b
 
 	defer rows.Close()
 	for rows.Next() {
-		bonusTransaction := bonusTransactions.BonusTransaction{}
+		bonusTransaction := BonusTransaction{}
 		err = rows.Scan(&bonusTransaction.OrderNumber, &bonusTransaction.UserID, &bonusTransaction.ProcessedAt, &bonusTransaction.TransactionType, &bonusTransaction.Sum)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
@@ -87,14 +86,14 @@ func (r *Repo) List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*b
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *bonusTransactions.GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO bonus_transactions (order_code, user_id, transaction_type, sum) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *bonusTransactions.GetPars) (*bonusTransactions.BonusTransaction, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, bool, error) {
 	var values []interface{}
-	var result bonusTransactions.BonusTransaction
+	var result BonusTransaction
 	query := "SELECT * FROM bonus_transactions WHERE true"
 
 	paramNum := 1
@@ -136,7 +135,7 @@ func (r *Repo) Get(ctx context.Context, pars *bonusTransactions.GetPars) (*bonus
 	return &result, result.OrderNumber != "", err
 }
 
-func (r *Repo) Update(ctx context.Context, pars *bonusTransactions.GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 	var values []interface{}
 
 	query := "UPDATE bonustransactions"
@@ -188,7 +187,7 @@ func (r *Repo) Update(ctx context.Context, pars *bonusTransactions.GetPars) erro
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *bonusTransactions.GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 	_, err := r.Con.Exec(ctx, "DELETE FROM bonus_transactions WHERE order_code = $1;", pars.OrderNumber)
 	return err
 }
