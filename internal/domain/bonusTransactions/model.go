@@ -1,4 +1,4 @@
-package model
+package bonusTransactions
 
 import "time"
 

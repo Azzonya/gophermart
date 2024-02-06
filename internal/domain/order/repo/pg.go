@@ -1,27 +1,26 @@
-package db
+package repo
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
-	"github.com/Azzonya/gophermart/internal/domain/order/model"
+	"github.com/Azzonya/gophermart/internal/domain/order"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Repo struct {
-	*commonRepoPg.Base
+	Con *pgxpool.Pool
 }
 
 func New(con *pgxpool.Pool) *Repo {
 	return &Repo{
-		commonRepoPg.NewBase(con),
+		con,
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
-	var result []*model.Order
+func (r *Repo) List(ctx context.Context, pars *order.ListPars) ([]*order.Order, error) {
+	var result []*order.Order
 	var values []interface{}
 	values = make([]interface{}, 0)
 
@@ -35,7 +34,7 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, 
 	}
 
 	if pars.OrderNumber != nil {
-		query += fmt.Sprintf(" AND code = $%d", paramNum)
+		query += fmt.Sprintf(" AND code = $%d OR $%d IS NULL", paramNum, paramNum)
 		values = append(values, *pars.OrderNumber)
 		paramNum++
 	}
@@ -83,26 +82,26 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, 
 
 	defer rows.Close()
 	for rows.Next() {
-		var order model.Order
-		err = rows.Scan(&order.OrderNumber, &order.UploadedAt, &order.Status, &order.UserID)
+		var orderFound order.Order
+		err = rows.Scan(&orderFound.OrderNumber, &orderFound.UploadedAt, &orderFound.Status, &orderFound.UserID)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, &order)
+		result = append(result, &orderFound)
 	}
 
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *order.GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO orders (code, status, user_id) VALUES ($1, $2, $3);", obj.OrderNumber, obj.Status, obj.UserID)
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *order.GetPars) (*order.Order, bool, error) {
 	var values []interface{}
-	var result model.Order
+	var result order.Order
 	values = make([]interface{}, 0)
 
 	query := "SELECT * FROM orders WHERE true"
@@ -142,7 +141,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool
 	return &result, result.OrderNumber != "", nil
 }
 
-func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *order.GetPars) error {
 	var values []interface{}
 	values = make([]interface{}, 0)
 
@@ -173,7 +172,7 @@ func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *model.GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *order.GetPars) error {
 	_, err := r.Con.Exec(ctx, "DELETE FROM orders WHERE code = $1;", pars.OrderNumber)
 	return err
 }

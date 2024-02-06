@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	orderModel "github.com/Azzonya/gophermart/internal/domain/order/model"
+	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/Azzonya/gophermart/internal/domain/auth"
 	"github.com/Azzonya/gophermart/internal/handler"
 	"github.com/gin-gonic/gin"
 	"log/slog"
@@ -32,7 +33,7 @@ func (o *Rest) Start(lAddr string) {
 
 	r := gin.Default()
 
-	r.Use(AuthMiddleware(o.jwtSecret),
+	r.Use(auth.AuthMiddleware(o.jwtSecret),
 		CompressRequest(),
 		DecompressRequest(),
 		gin.Recovery())

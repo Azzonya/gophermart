@@ -1,27 +1,35 @@
-package db
+package repo
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
-	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
+	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Repo struct {
-	*commonRepoPg.Base
+	Con *pgxpool.Pool
 }
 
 func New(con *pgxpool.Pool) *Repo {
 	return &Repo{
-		commonRepoPg.NewBase(con),
+		con,
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTransaction, error) {
-	var result []*model.BonusTransaction
+type RepoDBIntreface interface {
+	List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*bonusTransactions.BonusTransaction, error)
+	Create(ctx context.Context, obj *bonusTransactions.GetPars) error
+	Get(ctx context.Context, pars *bonusTransactions.GetPars) (*bonusTransactions.BonusTransaction, bool, error)
+	Update(ctx context.Context, pars *bonusTransactions.GetPars) error
+	Delete(ctx context.Context, pars *bonusTransactions.GetPars) error
+	Exists(ctx context.Context, login string) (bool, error)
+}
+
+func (r *Repo) List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*bonusTransactions.BonusTransaction, error) {
+	var result []*bonusTransactions.BonusTransaction
 	var values []interface{}
 	query := "SELECT * FROM bonus_transactions WHERE true"
 
@@ -73,7 +81,7 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTr
 
 	defer rows.Close()
 	for rows.Next() {
-		bonusTransaction := model.BonusTransaction{}
+		bonusTransaction := bonusTransactions.BonusTransaction{}
 		err = rows.Scan(&bonusTransaction.OrderNumber, &bonusTransaction.UserID, &bonusTransaction.ProcessedAt, &bonusTransaction.TransactionType, &bonusTransaction.Sum)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
@@ -88,14 +96,14 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.BonusTr
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *bonusTransactions.GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO bonus_transactions (order_code, user_id, transaction_type, sum) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransaction, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *bonusTransactions.GetPars) (*bonusTransactions.BonusTransaction, bool, error) {
 	var values []interface{}
-	var result model.BonusTransaction
+	var result bonusTransactions.BonusTransaction
 	query := "SELECT * FROM bonus_transactions WHERE true"
 
 	paramNum := 1
@@ -137,7 +145,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.BonusTransa
 	return &result, result.OrderNumber != "", err
 }
 
-func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *bonusTransactions.GetPars) error {
 	var values []interface{}
 
 	query := "UPDATE bonustransactions"
@@ -189,7 +197,7 @@ func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *model.GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *bonusTransactions.GetPars) error {
 	_, err := r.Con.Exec(ctx, "DELETE FROM bonus_transactions WHERE order_code = $1;", pars.OrderNumber)
 	return err
 }

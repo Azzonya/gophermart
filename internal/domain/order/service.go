@@ -1,20 +1,19 @@
-package service
+package order
 
 import (
 	"context"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
-	"github.com/Azzonya/gophermart/internal/domain/order/model"
-	bonus_transactions "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
+	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonusTransactions "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"strconv"
 	"time"
 )
 
 type Service struct {
 	repoDB                   RepoDBI
-	bonusTransactionsService bonus_transactions.WithdrawalServiceI
+	bonusTransactionsService bonusTransactions.WithdrawalServiceI
 }
 
-func New(repoDB RepoDBI, bonusTransactionsService bonus_transactions.WithdrawalServiceI) *Service {
+func New(repoDB RepoDBI, bonusTransactionsService bonusTransactions.WithdrawalServiceI) *Service {
 	return &Service{
 		repoDB:                   repoDB,
 		bonusTransactionsService: bonusTransactionsService,
@@ -49,44 +48,48 @@ func (s *Service) IsLuhnValid(orderNumber string) bool {
 	return total%10 == 0
 }
 
-func (s *Service) List(ctx context.Context, pars *model.ListPars) ([]*model.Order, error) {
+func (s *Service) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 	return s.repoDB.List(ctx, pars)
 }
 
-func (s *Service) ListWithAccrual(ctx context.Context, pars *model.ListPars) ([]*model.OrderWithAccrual, error) {
+func (s *Service) ListWithAccrual(ctx context.Context, pars *ListPars) ([]*OrderWithAccrual, error) {
 	orders, err := s.repoDB.List(ctx, pars)
 	if err != nil {
 		return nil, err
 	}
 
-	orderMap := make(map[string]model.Order)
+	orderMap := make(map[string]Order)
 	for _, order := range orders {
 		orderMap[order.OrderNumber] = *order
 	}
 
-	bonusTransactions, err := s.bonusTransactionsService.List(ctx, &bonus_transactionsModel.ListPars{
+	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &bonusTransactionsModel.ListPars{
 		UserID:          pars.UserID,
-		TransactionType: bonus_transactionsModel.Accrual,
+		TransactionType: bonusTransactionsModel.Accrual,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	bonusMap := make(map[string]bonus_transactionsModel.BonusTransaction)
-	for _, bonus := range bonusTransactions {
+	bonusMap := make(map[string]bonusTransactionsModel.BonusTransaction)
+	for _, bonus := range bonusTransactionsList {
 		bonusMap[bonus.OrderNumber] = *bonus
 	}
 
-	var result []*model.OrderWithAccrual
-	for _, order := range orders {
-		bonusTransaction, exists := bonusMap[order.OrderNumber]
+	var result []*OrderWithAccrual
+	var bonusTransaction bonusTransactionsModel.BonusTransaction
+	var accrualSum int
+	var exists bool
 
-		accrualSum := 0
+	for _, order := range orders {
+		bonusTransaction, exists = bonusMap[order.OrderNumber]
+
+		accrualSum = 0
 		if exists {
 			accrualSum = bonusTransaction.Sum
 		}
 
-		result = append(result, &model.OrderWithAccrual{
+		result = append(result, &OrderWithAccrual{
 			OrderNumber: order.OrderNumber,
 			Status:      order.Status,
 			Accrual:     accrualSum,
@@ -97,19 +100,19 @@ func (s *Service) ListWithAccrual(ctx context.Context, pars *model.ListPars) ([]
 	return result, nil
 }
 
-func (s *Service) Create(ctx context.Context, obj *model.GetPars) error {
+func (s *Service) Create(ctx context.Context, obj *GetPars) error {
 	return s.repoDB.Create(ctx, obj)
 }
 
-func (s *Service) Get(ctx context.Context, pars *model.GetPars) (*model.Order, bool, error) {
+func (s *Service) Get(ctx context.Context, pars *GetPars) (*Order, bool, error) {
 	return s.repoDB.Get(ctx, pars)
 }
 
-func (s *Service) Update(ctx context.Context, pars *model.GetPars) error {
+func (s *Service) Update(ctx context.Context, pars *GetPars) error {
 	return s.repoDB.Update(ctx, pars)
 }
 
-func (s *Service) Delete(ctx context.Context, pars *model.GetPars) error {
+func (s *Service) Delete(ctx context.Context, pars *GetPars) error {
 	return s.repoDB.Delete(ctx, pars)
 }
 

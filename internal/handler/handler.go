@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/Azzonya/gophermart/internal/auth"
+	"github.com/Azzonya/gophermart/internal/domain/auth"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"

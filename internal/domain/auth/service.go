@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
-	userModel "github.com/Azzonya/gophermart/internal/domain/user/model"
+	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	userService "github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -28,6 +28,33 @@ type Auth struct {
 
 func New(jwtSecret string) *Auth {
 	return &Auth{JwtSecret: jwtSecret}
+}
+
+func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		if path == "/api/user/register" || path == "/api/user/login" {
+			c.Next()
+			return
+		}
+
+		authorizer := New(jwtSecret)
+
+		userID, err := authorizer.GetUserIDFromCookie(c)
+		if err != nil && !errors.Is(err, http.ErrNoCookie) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to get cookie",
+				"error":   err.Error(),
+			})
+			return
+		}
+		if len(userID) == 0 {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		c.Next()
+	}
 }
 
 func (a *Auth) GetUserIDFromCookie(c *gin.Context) (string, error) {

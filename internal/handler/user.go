@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	userModel "github.com/Azzonya/gophermart/internal/domain/user/model"
+	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

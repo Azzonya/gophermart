@@ -3,20 +3,20 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/auth"
 	"github.com/Azzonya/gophermart/internal/client/accrual/http"
 	"github.com/Azzonya/gophermart/internal/config"
-	bonusService "github.com/Azzonya/gophermart/internal/domain/bonus/service"
-	bonusTransactionsRepo "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/repo/db"
-	bonusTransactionsService "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/service"
-	orderRepo "github.com/Azzonya/gophermart/internal/domain/order/repo/db"
-	OrderService "github.com/Azzonya/gophermart/internal/domain/order/service"
-	userRepo "github.com/Azzonya/gophermart/internal/domain/user/repo/db"
-	UserService "github.com/Azzonya/gophermart/internal/domain/user/service"
+	"github.com/Azzonya/gophermart/internal/domain/auth"
+	bonusService "github.com/Azzonya/gophermart/internal/domain/bonus"
+	bonusTransactionsService "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonusTransactionsRepo "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/repo"
+	orderService "github.com/Azzonya/gophermart/internal/domain/order"
+	orderRepo "github.com/Azzonya/gophermart/internal/domain/order/repo"
+	userService "github.com/Azzonya/gophermart/internal/domain/user"
+	userRepo "github.com/Azzonya/gophermart/internal/domain/user/repo"
 	"github.com/Azzonya/gophermart/internal/handler"
-	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
-	"github.com/Azzonya/gophermart/internal/usecase/order"
-	"github.com/Azzonya/gophermart/internal/usecase/user"
+	bonusTransactionsUsecase "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
+	orderUsecase "github.com/Azzonya/gophermart/internal/usecase/order"
+	userUsecase "github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
 	"os"
@@ -34,10 +34,10 @@ type App struct {
 	bonusService *bonusService.Service
 
 	// user
-	userService *UserService.Service
+	userService *userService.Service
 
 	// order
-	orderService *OrderService.Service
+	orderService *orderService.Service
 
 	// bonustransactions
 	bonusTransactionsService *bonusTransactionsService.Service
@@ -72,23 +72,23 @@ func (a *App) Init() {
 		//bonus transaction
 		bonusTransactionsRepoV := bonusTransactionsRepo.New(a.pgpool)
 		a.bonusTransactionsService = bonusTransactionsService.New(bonusTransactionsRepoV)
-		bonusTransactionsUsecase := bonustransactions.New(a.bonusTransactionsService)
+		bonusTransactionsUsecaseV := bonusTransactionsUsecase.New(a.bonusTransactionsService)
 
 		//user
 		userRepoV := userRepo.New(a.pgpool)
-		a.userService = UserService.New(userRepoV, a.bonusTransactionsService)
-		userUsecase := user.New(a.userService)
+		a.userService = userService.New(userRepoV, a.bonusTransactionsService)
+		userUsecaseV := userUsecase.New(a.userService)
 
 		//order
 		orderRepoV := orderRepo.New(a.pgpool)
-		a.orderService = OrderService.New(orderRepoV, a.bonusTransactionsService)
-		orderUsecase := order.New(a.orderService)
+		a.orderService = orderService.New(orderRepoV, a.bonusTransactionsService)
+		orderUsecaseV := orderUsecase.New(a.orderService)
 
 		//bonus
 		a.bonusService = bonusService.New(a.accrualClient, a.bonusTransactionsService, a.orderService)
 
 		//handers
-		a.userHandlers = handler.New(authorizer, userUsecase, orderUsecase, bonusTransactionsUsecase)
+		a.userHandlers = handler.New(authorizer, userUsecaseV, orderUsecaseV, bonusTransactionsUsecaseV)
 
 		// server
 		a.rest = NewRest(a.userHandlers, config.Conf.JwtSecret)
@@ -121,7 +121,7 @@ func (a *App) Listen() {
 
 	// wait signal
 	<-signalCtx.Done()
-	a.bonusService.Wg.Wait()
+	a.bonusService.Wait()
 }
 
 func (a *App) Stop() {

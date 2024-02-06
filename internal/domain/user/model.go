@@ -1,8 +1,4 @@
-package model
-
-import (
-	commonModel "github.com/Azzonya/gophermart/internal/domain/common/model"
-)
+package user
 
 type User struct {
 	ID       string
@@ -28,8 +24,6 @@ func (m *GetPars) IsValid() bool {
 }
 
 type ListPars struct {
-	commonModel.ListParams
-
 	Login      *string
 	Balance    *int
 	MinBalance *int

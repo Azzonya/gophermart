@@ -1,27 +1,26 @@
-package db
+package repo
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	commonRepoPg "github.com/Azzonya/gophermart/internal/domain/common/repo/pg"
-	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	"github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Repo struct {
-	*commonRepoPg.Base
+	Con *pgxpool.Pool
 }
 
 func New(con *pgxpool.Pool) *Repo {
 	return &Repo{
-		commonRepoPg.NewBase(con),
+		con,
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, error) {
-	var result []*model.User
+func (r *Repo) List(ctx context.Context, pars *user.ListPars) ([]*user.User, error) {
+	var result []*user.User
 	var values = make([]interface{}, 0)
 
 	query := "SELECT * FROM users WHERE true"
@@ -48,26 +47,26 @@ func (r *Repo) List(ctx context.Context, pars *model.ListPars) ([]*model.User, e
 
 	defer rows.Close()
 	for rows.Next() {
-		var user model.User
-		err = rows.Scan(&user.ID, &user.Login, &user.Password, &user.Balance)
+		var userFound user.User
+		err = rows.Scan(&userFound.ID, &userFound.Login, &userFound.Password, &userFound.Balance)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, &user)
+		result = append(result, &userFound)
 	}
 
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *model.GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *user.GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *user.GetPars) (*user.User, bool, error) {
 	var values []interface{}
-	var result model.User
+	var result user.User
 	values = make([]interface{}, 0)
 
 	query := "SELECT * FROM users WHERE true"
@@ -108,7 +107,7 @@ func (r *Repo) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool,
 	return &result, result.Login != "", err
 }
 
-func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *user.GetPars) error {
 	var values []interface{}
 	values = make([]interface{}, 0)
 
@@ -150,7 +149,7 @@ func (r *Repo) Update(ctx context.Context, pars *model.GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *model.GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *user.GetPars) error {
 	_, err := r.Con.Exec(ctx, "DELETE FROM users WHERE login = $1;", pars.Login)
 	return err
 }

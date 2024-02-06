@@ -1,9 +1,8 @@
-package service
+package user
 
 import (
 	"context"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions/model"
-	"github.com/Azzonya/gophermart/internal/domain/user/model"
+	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -40,7 +39,7 @@ func (s *Service) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 	return s.repoDB.Exists(ctx, login)
 }
 
-func (s *Service) Register(ctx context.Context, user *model.GetPars) (*model.User, error) {
+func (s *Service) Register(ctx context.Context, user *GetPars) (*User, error) {
 	var err error
 	user.Password, err = s.HashPassword(user.Password)
 	if err != nil {
@@ -52,7 +51,7 @@ func (s *Service) Register(ctx context.Context, user *model.GetPars) (*model.Use
 		return nil, err
 	}
 
-	u, _, err := s.repoDB.Get(ctx, &model.GetPars{
+	u, _, err := s.repoDB.Get(ctx, &GetPars{
 		Login: user.Login,
 	})
 	if err != nil {
@@ -62,7 +61,7 @@ func (s *Service) Register(ctx context.Context, user *model.GetPars) (*model.Use
 	return u, err
 }
 
-func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *model.GetPars) (*model.UserBalance, error) {
+func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *GetPars) (*UserBalance, error) {
 	user, _, err := s.Get(ctx, pars)
 	if err != nil {
 		return nil, err
@@ -81,29 +80,29 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *model.GetPa
 		withdrawn += v.Sum
 	}
 
-	return &model.UserBalance{
+	return &UserBalance{
 		Current:   user.Balance,
 		Withdrawn: withdrawn,
 	}, nil
 }
 
-func (s *Service) List(ctx context.Context, pars *model.ListPars) ([]*model.User, error) {
+func (s *Service) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 	return s.repoDB.List(ctx, pars)
 }
 
-func (s *Service) Create(ctx context.Context, obj *model.GetPars) error {
+func (s *Service) Create(ctx context.Context, obj *GetPars) error {
 	return s.repoDB.Create(ctx, obj)
 }
 
-func (s *Service) Get(ctx context.Context, pars *model.GetPars) (*model.User, bool, error) {
+func (s *Service) Get(ctx context.Context, pars *GetPars) (*User, bool, error) {
 	return s.repoDB.Get(ctx, pars)
 }
 
-func (s *Service) Update(ctx context.Context, pars *model.GetPars) error {
+func (s *Service) Update(ctx context.Context, pars *GetPars) error {
 	return s.repoDB.Update(ctx, pars)
 }
 
-func (s *Service) Delete(ctx context.Context, pars *model.GetPars) error {
+func (s *Service) Delete(ctx context.Context, pars *GetPars) error {
 	return s.repoDB.Delete(ctx, pars)
 }
 
