@@ -2,14 +2,13 @@ package bonusTransactions
 
 import (
 	"context"
-	"github.com/Azzonya/gophermart/internal/domain/bonusTransactions/repo"
 )
 
 type Service struct {
-	repoDB repo.RepoDBIntreface
+	repoDB RepoDBIntreface
 }
 
-func New(repoDB repo.RepoDBIntreface) *Service {
+func New(repoDB RepoDBIntreface) *Service {
 	return &Service{
 		repoDB: repoDB,
 	}
