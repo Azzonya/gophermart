@@ -19,15 +19,6 @@ func New(con *pgxpool.Pool) *Repo {
 	}
 }
 
-type RepoDBIntreface interface {
-	List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*bonusTransactions.BonusTransaction, error)
-	Create(ctx context.Context, obj *bonusTransactions.GetPars) error
-	Get(ctx context.Context, pars *bonusTransactions.GetPars) (*bonusTransactions.BonusTransaction, bool, error)
-	Update(ctx context.Context, pars *bonusTransactions.GetPars) error
-	Delete(ctx context.Context, pars *bonusTransactions.GetPars) error
-	Exists(ctx context.Context, login string) (bool, error)
-}
-
 func (r *Repo) List(ctx context.Context, pars *bonusTransactions.ListPars) ([]*bonusTransactions.BonusTransaction, error) {
 	var result []*bonusTransactions.BonusTransaction
 	var values []interface{}
