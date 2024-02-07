@@ -25,21 +25,6 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	exist, err := u.userUsecase.IsLoginTaken(ctx, req.Login)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to check login",
-			"error":   err.Error(),
-		})
-		return
-	}
-	if exist {
-		c.JSON(http.StatusConflict, gin.H{
-			"error": "Login is already taken",
-		})
-		return
-	}
-
 	newUser, err := u.userUsecase.Register(ctx, req)
 	if err != nil {
 		var notUniqErr errs.ErrUserNotUniq
