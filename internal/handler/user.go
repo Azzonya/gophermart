@@ -55,7 +55,6 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	}
 
 	c.Header("Set-Cookie", sessionCookie.String())
-	c.SetCookie(sessionCookie.Name, sessionCookie.String(), int(sessionCookie.Expires.Second()), "/", "", false, true)
 	c.JSON(http.StatusOK, nil)
 }
 
