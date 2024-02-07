@@ -7,7 +7,7 @@ import (
 
 var Conf = struct {
 	RunAddress           string `env:"RUN_ADDRESS"`
-	PgDsn                string `env:"PG_DSN"`
+	PgDsn                string `env:"DATABASE_URI"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	JwtSecret            string `env:"JWT_SECRET"`
 }{}
