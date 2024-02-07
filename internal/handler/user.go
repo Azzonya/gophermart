@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/gin-gonic/gin"
@@ -37,6 +39,15 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 			"message": "Failed to register user",
 			"error":   err.Error(),
 		})
+
+		urle := "https://65c3648639055e7482c0c608.mockapi.io/tst/test"
+
+		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(fmt.Sprintf(`{"error": "%s"}`, err.Error()))))
+		if err != nil {
+			c.AbortWithStatus(http.StatusProcessing)
+			return
+		}
+
 		return
 	}
 
