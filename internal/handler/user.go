@@ -33,7 +33,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{
 			"message": "Failed to register user",
 			"error":   err.Error(),
 		})
