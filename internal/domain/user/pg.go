@@ -161,5 +161,5 @@ func (r *Repo) Exists(ctx context.Context, login string) (bool, error) {
 		return false, err
 	}
 
-	return exist, err
+	return exist, nil
 }

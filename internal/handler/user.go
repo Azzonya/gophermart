@@ -26,7 +26,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	exist, err := u.userUsecase.IsLoginTaken(ctx, req.Login)
 	if err != nil {
-		c.JSON(http.StatusPreconditionRequired, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to check login",
 			"error":   err.Error(),
 		})
