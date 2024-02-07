@@ -9,9 +9,10 @@ import (
 )
 
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
+	var err error
+
 	c.Header("Content-Type", "application/json")
 
-	var err error
 	req := &userModel.GetPars{}
 
 	ctx := c.Request.Context()
@@ -34,11 +35,11 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to register user",
-			"error":   err.Error(),
-		})
-		return
+		//c.JSON(http.StatusInternalServerError, gin.H{
+		//	"message": "Failed to register user",
+		//	"error":   err.Error(),
+		//})
+		//return
 	}
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
