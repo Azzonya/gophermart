@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -51,13 +50,11 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
 	if errS != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusNotModified, gin.H{
 			"message": sessionCookie.String(),
 		})
 		return
 	}
-
-	fmt.Println("asd " + sessionCookie.String())
 
 	c.Header("Set-Cookie", sessionCookie.String())
 	c.JSON(http.StatusOK, nil)
