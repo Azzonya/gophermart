@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
+	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -41,8 +42,15 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	newUser, err := u.userUsecase.Register(ctx, req)
 	if err != nil {
-		c.JSON(http.StatusPermanentRedirect, gin.H{
-			"message": "Failed to read body",
+		var notUniqErr errs.ErrUserNotUniq
+		if errors.As(err, &notUniqErr) {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to register user",
 			"error":   err.Error(),
 		})
 		return

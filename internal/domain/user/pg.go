@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Azzonya/gophermart/internal/errs"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -60,6 +63,12 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 
 func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return errs.ErrUserNotUniq{Login: obj.Login}
+		}
+	}
 	return err
 }
 
