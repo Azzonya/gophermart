@@ -54,6 +54,10 @@ func (a *App) Init() {
 	// pgpool
 	{
 		a.pgpool, err = pgxpool.New(context.Background(), config.Conf.PgDsn)
+		err = a.pgpool.Ping(context.Background())
+		if err != nil {
+			panic(err)
+		}
 		errCheck(err, "pgxpool.New")
 	}
 
