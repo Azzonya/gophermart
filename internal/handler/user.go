@@ -51,11 +51,13 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
 	if errS != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": sessionCookie.String(),
+		})
 		return
 	}
 
-	fmt.Println(sessionCookie)
+	fmt.Println("asd " + sessionCookie.String())
 
 	c.Header("Set-Cookie", sessionCookie.String())
 	c.JSON(http.StatusOK, nil)
