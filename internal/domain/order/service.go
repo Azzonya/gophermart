@@ -2,7 +2,7 @@ package order
 
 import (
 	"context"
-	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	bonusTransactions "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"strconv"
 	"time"

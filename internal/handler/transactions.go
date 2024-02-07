@@ -1,7 +1,7 @@
 package handler
 
 import (
-	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/gin-gonic/gin"

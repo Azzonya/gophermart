@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"golang.org/x/crypto/bcrypt"
 )

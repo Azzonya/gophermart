@@ -7,7 +7,7 @@ import (
 	"github.com/Azzonya/gophermart/internal/config"
 	"github.com/Azzonya/gophermart/internal/domain/auth"
 	bonusService "github.com/Azzonya/gophermart/internal/domain/bonus"
-	bonusTransactionsService "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonusTransactionsService "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	orderService "github.com/Azzonya/gophermart/internal/domain/order"
 	userService "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/Azzonya/gophermart/internal/handler"

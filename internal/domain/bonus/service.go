@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http"
-	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonusTransactions"
+	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
