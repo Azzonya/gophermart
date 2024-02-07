@@ -89,7 +89,7 @@ func (a *App) Init() {
 		a.bonusService = bonusService.New(a.accrualClient, a.bonusTransactionsService, a.orderService)
 
 		//handers
-		a.userHandlers = handler.New(authorizer, userUsecaseV, orderUsecaseV, bonusTransactionsUsecaseV)
+		a.userHandlers = handler.New(authorizer, userUsecaseV, orderUsecaseV, bonusTransactionsUsecaseV, config.Conf.PgDsn)
 
 		// server
 		a.rest = NewRest(a.userHandlers, config.Conf.JwtSecret)

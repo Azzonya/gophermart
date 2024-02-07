@@ -12,13 +12,16 @@ type UserHandlers struct {
 	userUsecase              *user.Usecase
 	orderUsecase             *order.Usecase
 	bonusTransactionsUsecase *bonustransactions.Usecase
+
+	pgDsn string
 }
 
-func New(auth *auth.Auth, userUsecase *user.Usecase, orderUsecase *order.Usecase, bonusTransactionsUsecase *bonustransactions.Usecase) *UserHandlers {
+func New(auth *auth.Auth, userUsecase *user.Usecase, orderUsecase *order.Usecase, bonusTransactionsUsecase *bonustransactions.Usecase, pgDsn string) *UserHandlers {
 	return &UserHandlers{
 		auth:                     auth,
 		userUsecase:              userUsecase,
 		orderUsecase:             orderUsecase,
 		bonusTransactionsUsecase: bonusTransactionsUsecase,
+		pgDsn:                    pgDsn,
 	}
 }
