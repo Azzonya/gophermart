@@ -41,7 +41,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	newUser, err := u.userUsecase.Register(ctx, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusPermanentRedirect, gin.H{
 			"message": "Failed to read body",
 			"error":   err.Error(),
 		})
