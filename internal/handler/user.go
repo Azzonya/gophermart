@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -53,6 +54,8 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println(sessionCookie)
 
 	c.Header("Set-Cookie", sessionCookie.String())
 	c.JSON(http.StatusOK, nil)
