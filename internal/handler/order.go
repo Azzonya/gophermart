@@ -20,10 +20,10 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 
 	orderNumber := string(body)
 
-	//if !u.orderUsecase.IsLuhnValid(orderNumber) {
-	//	c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
-	//	return
-	//}
+	if !u.orderUsecase.IsLuhnValid(orderNumber) {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
+		return
+	}
 
 	foundOrder, orderExist, err := u.orderUsecase.Get(ctx, &orderModel.GetPars{
 		OrderNumber: orderNumber,
