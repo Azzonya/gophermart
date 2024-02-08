@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
@@ -9,6 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
+
+type Jsn struct {
+	Host         string `json:"host"`
+	ShortMessage string `json:"short_message"`
+	Err          string `json:"_err"`
+}
 
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	var err error
@@ -45,10 +52,17 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		})
 
 		urle := "https://graylog.api.mechta.market/gelf"
-		a := fmt.Sprintf(`{"host": "%s", "message": "%s"}`, err.Error(), u.pgDsn+"1")
+		d := Jsn{
+			Host:         "Azamat",
+			ShortMessage: u.pgDsn + "1",
+			Err:          err.Error(),
+		}
+		jsn, err := json.Marshal(d)
+		if err != nil {
+			return
+		}
 
-		fmt.Println(a)
-		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(a)))
+		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(jsn)))
 		if err != nil {
 			c.AbortWithStatus(http.StatusProcessing)
 			return
