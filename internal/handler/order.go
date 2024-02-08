@@ -71,7 +71,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusAccepted, nil)
 }
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {

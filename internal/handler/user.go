@@ -64,7 +64,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(jsn)))
 		if err != nil {
-			c.AbortWithStatus(http.StatusProcessing)
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
@@ -73,7 +73,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
 	if errS != nil {
-		c.JSON(http.StatusNotModified, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": sessionCookie.String(),
 		})
 		return
