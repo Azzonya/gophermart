@@ -36,11 +36,8 @@ func (c *Client) Send(orderNumber string) (*RequestResult, error) {
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	defer func() {
-		err := resp.Body.Close()
+		err = resp.Body.Close()
 		if err != nil {
 			slog.Error("cannot close response body")
 		}
