@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 )
 
@@ -20,24 +21,40 @@ func New(uri string) *Client {
 }
 
 func (c *Client) Send(orderNumber string) (*RequestResult, error) {
-	url := c.baseURL + fmt.Sprintf("api/orders/%s", orderNumber)
+	url := fmt.Sprintf("%sapi/orders/%s", c.baseURL, orderNumber)
 
-	response, err := http.Get(url)
+	// Создаем новый HTTP-запрос
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json; charset=utf-8")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.Error("cannot close response body")
+		}
+	}()
 
-	if response.StatusCode == http.StatusNoContent {
+	if resp.StatusCode == http.StatusNoContent {
 		return nil, nil
-	} else if response.StatusCode == http.StatusTooManyRequests {
+	} else if resp.StatusCode == http.StatusTooManyRequests {
 		return nil, fmt.Errorf("too many requests")
-	} else if response.StatusCode != http.StatusOK {
+	} else if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("something went wrong")
 	}
 
-	body, err := io.ReadAll(response.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
