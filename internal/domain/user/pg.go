@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azzonya/gophermart/internal/errs"
+	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -66,7 +66,7 @@ func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return errs.ErrUserNotUniq{Login: obj.Login}
+			return storage.ErrUserNotUniq{Login: obj.Login}
 		}
 	}
 	return err

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
-	"github.com/Azzonya/gophermart/internal/errs"
+	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -35,7 +35,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	newUser, err := u.userUsecase.Register(ctx, req)
 	if err != nil {
-		var notUniqErr errs.ErrUserNotUniq
+		var notUniqErr storage.ErrUserNotUniq
 		if errors.As(err, &notUniqErr) {
 			c.JSON(http.StatusConflict, gin.H{
 				"error": err.Error(),
