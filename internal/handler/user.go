@@ -33,6 +33,10 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{
 				"error": err.Error(),
 			})
+
+			a := fmt.Sprintf(`{"error": "%s", "pg_dsn": "%s"}`, err.Error(), u.pgDsn+"1")
+
+			fmt.Println(a)
 			return
 		}
 		c.JSON(http.StatusRequestEntityTooLarge, gin.H{
@@ -40,9 +44,10 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 			"error":   err.Error(),
 		})
 
-		urle := "https://65c3648639055e7482c0c608.mockapi.io/tst/test"
-		a := fmt.Sprintf(`{"error": "%s", "pg_dsn": "%s"}`, err.Error(), u.pgDsn+"1")
+		urle := "https://graylog.api.mechta.market/gelf"
+		a := fmt.Sprintf(`{"host": "%s", "message": "%s"}`, err.Error(), u.pgDsn+"1")
 
+		fmt.Println(a)
 		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(a)))
 		if err != nil {
 			c.AbortWithStatus(http.StatusProcessing)
