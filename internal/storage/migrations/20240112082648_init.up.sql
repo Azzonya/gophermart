@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS orders (
                                       code VARCHAR(255) NOT NULL PRIMARY KEY,
                                       uploaded_at timestamp with time zone default current_timestamp,
                                       status order_status_enum NOT NULL,
-                                      user_id INT REFERENCES users(id)
+                                      user_id INT
 );
 
 CREATE INDEX idx_order_status ON orders (status);
