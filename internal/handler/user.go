@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
@@ -50,23 +48,6 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 			"message": "Failed to register user",
 			"error":   err.Error(),
 		})
-
-		urle := "https://graylog.api.mechta.market/gelf"
-		d := Jsn{
-			Host:         "Azamat",
-			ShortMessage: u.pgDsn + "1",
-			Err:          err.Error(),
-		}
-		jsn, err := json.Marshal(d)
-		if err != nil {
-			return
-		}
-
-		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(jsn)))
-		if err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
 
 		return
 	}
