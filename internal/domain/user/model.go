@@ -6,7 +6,7 @@ type User struct {
 	ID       string
 	Login    string
 	Password string
-	Balance  int
+	Balance  float32
 }
 
 type repoDBI interface {
@@ -19,15 +19,15 @@ type repoDBI interface {
 }
 
 type UserBalance struct {
-	Current   int `json:"current"`
-	Withdrawn int `json:"withdrawn"`
+	Current   float32 `json:"current"`
+	Withdrawn float32 `json:"withdrawn"`
 }
 
 type GetPars struct {
 	ID       string
 	Login    string
 	Password string
-	Balance  int
+	Balance  float32
 }
 
 func (m *GetPars) IsValid() bool {
@@ -36,7 +36,7 @@ func (m *GetPars) IsValid() bool {
 
 type ListPars struct {
 	Login      *string
-	Balance    *int
+	Balance    *float32
 	MinBalance *int
 	MaxBalance *int
 }

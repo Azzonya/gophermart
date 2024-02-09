@@ -75,7 +75,7 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *GetPars) (*
 		return nil, err
 	}
 
-	withdrawn := 0
+	var withdrawn float32
 	for _, v := range bonusTransactionsList {
 		withdrawn += v.Sum
 	}

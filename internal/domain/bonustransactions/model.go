@@ -19,7 +19,7 @@ type BonusTransaction struct {
 	UserID          string
 	ProcessedAt     time.Time
 	TransactionType TransactionType
-	Sum             int
+	Sum             float32
 }
 
 type TransactionType string
@@ -34,7 +34,7 @@ type GetPars struct {
 	UserID          string
 	ProcessedAt     time.Time
 	TransactionType TransactionType
-	Sum             int
+	Sum             float32
 }
 
 type ListPars struct {
@@ -43,7 +43,7 @@ type ListPars struct {
 	ProcessedBefore *time.Time
 	ProcessedAfter  *time.Time
 	TransactionType TransactionType
-	MinSum          *int
-	MaxSum          *int
+	MinSum          *float32
+	MaxSum          *float32
 	OrderBy         string
 }

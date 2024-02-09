@@ -78,7 +78,7 @@ func (s *Service) ListWithAccrual(ctx context.Context, pars *ListPars) ([]*Order
 
 	var result []*OrderWithAccrual
 	var bonusTransaction bonusTransactionsModel.BonusTransaction
-	var accrualSum int
+	var accrualSum float32
 	var exists bool
 
 	for _, order := range orders {

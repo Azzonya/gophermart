@@ -24,7 +24,7 @@ type RepoDBI interface {
 type OrderWithAccrual struct {
 	OrderNumber string      `json:"number"`
 	Status      OrderStatus `json:"status"`
-	Accrual     int         `json:"accrual,omitempty"`
+	Accrual     float32     `json:"accrual,omitempty"`
 	UploadedAt  string      `json:"uploaded_at"`
 }
 

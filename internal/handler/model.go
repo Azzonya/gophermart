@@ -14,18 +14,18 @@ func (r *RegisterRequest) Decode() *userModel.User {
 }
 
 type UserBalanceResult struct {
-	Balance   float64 `json:"balance"`
-	Withdrawn float64 `json:"withdrawn"`
+	Balance   float32 `json:"balance"`
+	Withdrawn float32 `json:"withdrawn"`
 }
 
 type WithdrawalBalanceRequest struct {
 	UserID      string
-	OrderNumber string `json:"order"`
-	Sum         int    `json:"sum"`
+	OrderNumber string  `json:"order"`
+	Sum         float32 `json:"sum"`
 }
 
 type WithdrawalsResult struct {
-	OrderNumber string `json:"order"`
-	Sum         int    `json:"sum"`
-	ProcessedAt string `json:"processed_at"`
+	OrderNumber string  `json:"order"`
+	Sum         float32 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
 }
