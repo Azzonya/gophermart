@@ -76,16 +76,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {
 	// Реализация получения списка заказов пользователя
-	c.Header("Content-Type", "application/json")
-
-	userID, err := u.auth.GetUserIDFromCookie(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to get cookie",
-			"error":   err.Error(),
-		})
-		return
-	}
+	userID, _ := u.auth.GetUserIDFromCookie(c)
 
 	orders, err := u.orderUsecase.ListWithAccrual(c.Request.Context(), &orderModel.ListPars{
 		UserID:  &userID,
@@ -104,5 +95,6 @@ func (u *UserHandlers) GetOrders(c *gin.Context) {
 		return
 	}
 
+	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.JSON(http.StatusOK, orders)
 }
