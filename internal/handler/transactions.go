@@ -105,13 +105,13 @@ func (u *UserHandlers) GetWithdrawals(c *gin.Context) {
 		})
 		return
 	}
-
-	if len(withdrawals) == 0 {
-		c.JSON(http.StatusNoContent, gin.H{
-			"message": "not found",
-		})
-		return
-	}
+	//
+	//if len(withdrawals) == 0 {
+	//	c.JSON(http.StatusNoContent, gin.H{
+	//		"message": "not found",
+	//	})
+	//	return
+	//}
 
 	result := []*WithdrawalsResult{}
 	for _, v := range withdrawals {
