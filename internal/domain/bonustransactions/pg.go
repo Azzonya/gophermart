@@ -129,6 +129,9 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, bool,
 
 	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.OrderNumber, &result.UserID, &result.ProcessedAt, &result.TransactionType, &result.Sum)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, false, nil
+		}
 		return nil, false, err
 	}
 
