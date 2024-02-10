@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"errors"
 	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
-	"github.com/Azzonya/gophermart/internal/storage"
+	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
+	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -15,11 +15,37 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 
 	err := c.BindJSON(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to read body", "error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to read body",
+			"error":   err.Error(),
+		})
 		return
 	}
 
 	req.UserID, _ = u.auth.GetUserIDFromCookie(c)
+
+	foundUser, _, err := u.userUsecase.Get(c.Request.Context(), &userModel.GetPars{ID: req.UserID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user balance", "details": err.Error()})
+		return
+	}
+
+	if foundUser.Balance < req.Sum {
+		c.JSON(http.StatusPaymentRequired, gin.H{"message": "Insufficient balance"})
+		return
+	}
+
+	_, orderExist, err := u.orderUsecase.Get(ctx, &orderModel.GetPars{
+		OrderNumber: req.OrderNumber,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check order existence", "details": err.Error()})
+		return
+	}
+	if !orderExist {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Order not found"})
+		return
+	}
 
 	err = u.bonusTransactionsUsecase.Create(ctx, &bonusTransactionsModel.GetPars{
 		OrderNumber:     req.OrderNumber,
@@ -28,15 +54,12 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 		Sum:             req.Sum,
 	})
 
-	switch {
-	case errors.Is(err, storage.ErrUserInsufficientBalance{}):
-		c.JSON(http.StatusPaymentRequired, gin.H{"error": err.Error()})
-	case errors.Is(err, storage.ErrOrderNotExist{}):
-		c.JSON(http.StatusOK, gin.H{"message": err.Error()})
-	case err != nil:
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
-	default:
-		c.JSON(http.StatusOK, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to withdraw balance",
+			"error":   err.Error(),
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, nil)

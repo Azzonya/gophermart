@@ -63,6 +63,12 @@ func (u *Usecase) Get(ctx context.Context, pars *user.GetPars) (*user.User, bool
 	return u.srv.Get(ctx, pars)
 }
 
+func (u *Usecase) GetById(ctx context.Context, userID string) (*user.User, bool, error) {
+	return u.srv.Get(ctx, &user.GetPars{
+		ID: userID,
+	})
+}
+
 func (u *Usecase) Update(ctx context.Context, pars *user.GetPars) error {
 	return u.srv.Update(ctx, pars)
 }

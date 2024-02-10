@@ -3,16 +3,11 @@ package bonustransactions
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/domain/bonustransactions"
-	"github.com/Azzonya/gophermart/internal/domain/order"
-	"github.com/Azzonya/gophermart/internal/domain/user"
-	"github.com/Azzonya/gophermart/internal/storage"
 	"time"
 )
 
 type Usecase struct {
-	srv      WithdrawalServiceI
-	UserSrv  user.Service
-	OrderSrv order.Service
+	srv WithdrawalServiceI
 }
 
 func New(srv WithdrawalServiceI) *Usecase {
@@ -42,25 +37,6 @@ func (u *Usecase) List(ctx context.Context, pars *bonustransactions.ListPars) ([
 }
 
 func (u *Usecase) Create(ctx context.Context, obj *bonustransactions.GetPars) error {
-	foundUser, _, err := u.UserSrv.Get(ctx, &user.GetPars{ID: obj.UserID})
-	if err != nil {
-		return err
-	}
-
-	if foundUser.Balance < obj.Sum {
-		return storage.ErrUserInsufficientBalance{}
-	}
-
-	_, orderExist, err := u.OrderSrv.Get(ctx, &order.GetPars{
-		OrderNumber: obj.OrderNumber,
-	})
-	if err != nil {
-		return err
-	}
-	if !orderExist {
-		return storage.ErrOrderNotExist{OrderNumber: obj.OrderNumber}
-	}
-
 	return u.srv.Create(ctx, obj)
 }
 

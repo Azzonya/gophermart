@@ -82,9 +82,6 @@ func (a *App) Init() {
 		a.orderService = orderService.New(orderRepoV, a.bonusTransactionsService)
 		orderUsecaseV := orderUsecase.New(a.orderService)
 
-		bonusTransactionsUsecaseV.UserSrv = *a.userService
-		bonusTransactionsUsecaseV.OrderSrv = *a.orderService
-
 		//bonus
 		a.bonusService = bonusService.New(a.accrualClient, a.bonusTransactionsService, a.orderService)
 
