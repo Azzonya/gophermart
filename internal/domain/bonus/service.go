@@ -36,14 +36,17 @@ func (s *Service) Start(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			s.updateAccrualInfo(ctx)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.wg.Add(1)
+				s.updateAccrualInfo(ctx)
+			}
 		}
-	}
+	}()
 }
 
 func (s *Service) Wait() {
@@ -51,6 +54,8 @@ func (s *Service) Wait() {
 }
 
 func (s *Service) updateAccrualInfo(ctx context.Context) {
+	defer s.wg.Done()
+
 	statuses := []orderModel.OrderStatus{
 		orderModel.OrderStatusNew,
 		orderModel.OrderStatusProcessing,
@@ -63,56 +68,51 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 		return
 	}
 
-	s.wg.Add(len(orders))
 	for _, v := range orders {
-		go func(order *orderModel.Order) {
-			defer s.wg.Done()
 
-			responseResult, err := s.accrual.Send(order.OrderNumber)
-			if err != nil {
-				slog.Error(fmt.Sprintf("failed to send accrual for order %s: %s", order.OrderNumber, err.Error()))
-				return
-			}
+		responseResult, err := s.accrual.Send(v.OrderNumber)
+		if err != nil {
+			slog.Error(fmt.Sprintf("failed to send accrual for order %s: %s", v.OrderNumber, err.Error()))
+			return
+		}
 
-			if responseResult == nil {
-				return
-			}
+		if responseResult == nil {
+			return
+		}
 
-			if string(order.Status) != responseResult.Status {
-				err = s.orderService.Update(ctx, &orderModel.GetPars{
-					Status:      orderModel.OrderStatus(responseResult.Status),
-					OrderNumber: order.OrderNumber,
-				})
-				if err != nil {
-					slog.Error(fmt.Sprintf("failed to update order status for order %s: %s", order.OrderNumber, err.Error()))
-					return
-				}
-			}
-
-			_, exist, err := s.bonusTransactionsService.Get(ctx, &bonusTransactionsModel.GetPars{
-				OrderNumber:     order.OrderNumber,
-				TransactionType: bonusTransactionsModel.Accrual,
+		if string(v.Status) != responseResult.Status {
+			err = s.orderService.Update(ctx, &orderModel.GetPars{
+				Status:      orderModel.OrderStatus(responseResult.Status),
+				OrderNumber: v.OrderNumber,
 			})
 			if err != nil {
-				slog.Error(fmt.Sprintf("failed to check bonus transaction existence for order %s: %s", order.OrderNumber, err.Error()))
+				slog.Error(fmt.Sprintf("failed to update order status for order %s: %s", v.OrderNumber, err.Error()))
 				return
 			}
-			if exist {
-				slog.Error(fmt.Sprintf("bonus transaction with order number %s already exists", order.OrderNumber))
-				return
-			}
+		}
 
-			err = s.bonusTransactionsService.Create(ctx, &bonusTransactionsModel.GetPars{
-				OrderNumber:     order.OrderNumber,
-				UserID:          order.UserID,
-				TransactionType: bonusTransactionsModel.Accrual,
-				Sum:             responseResult.Accrual,
-			})
-			if err != nil {
-				slog.Error(fmt.Sprintf("failed to create bonus transaction for order %s: %s", order.OrderNumber, err.Error()))
-				return
-			}
+		_, exist, err := s.bonusTransactionsService.Get(ctx, &bonusTransactionsModel.GetPars{
+			OrderNumber:     v.OrderNumber,
+			TransactionType: bonusTransactionsModel.Accrual,
+		})
+		if err != nil {
+			slog.Error(fmt.Sprintf("failed to check bonus transaction existence for order %s: %s", v.OrderNumber, err.Error()))
+			return
+		}
+		if exist {
+			slog.Error(fmt.Sprintf("bonus transaction with order number %s already exists", v.OrderNumber))
+			return
+		}
 
-		}(v)
+		err = s.bonusTransactionsService.Create(ctx, &bonusTransactionsModel.GetPars{
+			OrderNumber:     v.OrderNumber,
+			UserID:          v.UserID,
+			TransactionType: bonusTransactionsModel.Accrual,
+			Sum:             responseResult.Accrual,
+		})
+		if err != nil {
+			slog.Error(fmt.Sprintf("failed to create bonus transaction for order %s: %s", v.OrderNumber, err.Error()))
+			return
+		}
 	}
 }
