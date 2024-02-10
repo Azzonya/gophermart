@@ -28,12 +28,6 @@ func (u *Usecase) Get(ctx context.Context, pars *order.GetPars) (*order.Order, b
 	return u.srv.Get(ctx, pars)
 }
 
-func (u *Usecase) GetByOrderNumber(ctx context.Context, orderNumber string) (*order.Order, bool, error) {
-	return u.srv.Get(ctx, &order.GetPars{
-		OrderNumber: orderNumber,
-	})
-}
-
 func (u *Usecase) Create(ctx context.Context, obj *order.GetPars) error {
 	if !u.srv.IsLuhnValid(obj.OrderNumber) {
 		return storage.ErrOrderNumberLuhnValid{OrderNumber: obj.OrderNumber}

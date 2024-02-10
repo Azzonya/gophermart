@@ -58,14 +58,7 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 	var err error
 	req := &userModel.GetPars{}
 
-	userID, err := u.auth.GetUserIDFromCookie(c)
-	if err != nil && !errors.Is(err, http.ErrNoCookie) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to get cookie",
-			"error":   err.Error(),
-		})
-		return
-	}
+	userID, _ := u.auth.GetUserIDFromCookie(c)
 	if len(userID) != 0 {
 		c.JSON(http.StatusOK, nil)
 		return

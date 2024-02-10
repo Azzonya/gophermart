@@ -13,3 +13,7 @@ type WithdrawalServiceI interface {
 	Delete(ctx context.Context, pars *bonustransactions.GetPars) error
 	Exists(ctx context.Context, orderNumber string) (bool, error)
 }
+
+type BonusServiceI interface {
+	WithdrawBalance(ctx context.Context, pars *bonustransactions.GetPars) error
+}

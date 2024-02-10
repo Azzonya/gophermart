@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	bonus_transactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
+	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -67,9 +67,9 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *GetPars) (*
 		return nil, err
 	}
 
-	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &bonus_transactionsModel.ListPars{
+	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &bonusTransactionsModel.ListPars{
 		UserID:          &pars.ID,
-		TransactionType: bonus_transactionsModel.Debit,
+		TransactionType: bonusTransactionsModel.Debit,
 	})
 	if err != nil {
 		return nil, err

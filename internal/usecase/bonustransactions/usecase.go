@@ -7,13 +7,18 @@ import (
 )
 
 type Usecase struct {
-	srv WithdrawalServiceI
+	srv   WithdrawalServiceI
+	bonus BonusServiceI
 }
 
 func New(srv WithdrawalServiceI) *Usecase {
 	return &Usecase{
 		srv: srv,
 	}
+}
+
+func (u *Usecase) SetBonusService(bonus BonusServiceI) {
+	u.bonus = bonus
 }
 
 func (u *Usecase) List(ctx context.Context, pars *bonustransactions.ListPars) ([]*bonustransactions.WithdrawalsResult, error) {
@@ -54,4 +59,8 @@ func (u *Usecase) Delete(ctx context.Context, pars *bonustransactions.GetPars) e
 
 func (u *Usecase) Exists(ctx context.Context, orderNumber string) (bool, error) {
 	return u.srv.Exists(ctx, orderNumber)
+}
+
+func (u *Usecase) WithdrawBalance(ctx context.Context, pars *bonustransactions.GetPars) error {
+	return u.bonus.WithdrawBalance(ctx, pars)
 }

@@ -75,7 +75,6 @@ func (o *Rest) Stop(ctx context.Context) error {
 }
 
 func (o *Rest) SetRouters(r *gin.Engine) {
-
 	r.POST("/api/user/register", o.userHandlers.RegisterUser)
 	r.POST("/api/user/login", o.userHandlers.LoginUser)
 	r.POST("/api/user/orders", o.userHandlers.UploadOrder)

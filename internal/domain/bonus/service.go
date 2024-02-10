@@ -6,8 +6,11 @@ import (
 	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http"
 	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
+	userModel "github.com/Azzonya/gophermart/internal/domain/user"
+	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
+	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"log/slog"
 	"sync"
 	"time"
@@ -21,22 +24,25 @@ type Service struct {
 	accrual                  ClientAccrualI
 	bonusTransactionsService bonustransactions.WithdrawalServiceI
 	orderService             order.OrderServiceI
+	userService              user.UserServiceI
 	wg                       sync.WaitGroup
 }
 
-func New(accrual ClientAccrualI, bonusTransactionsService bonustransactions.WithdrawalServiceI, orderService order.OrderServiceI) *Service {
+func New(accrual ClientAccrualI, bonusTransactionsService bonustransactions.WithdrawalServiceI, orderService order.OrderServiceI, user user.UserServiceI) *Service {
 	return &Service{
 		accrual:                  accrual,
 		bonusTransactionsService: bonusTransactionsService,
 		orderService:             orderService,
+		userService:              user,
 	}
 }
 
 func (s *Service) Start(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
 
 	go func() {
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -114,5 +120,60 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			slog.Error(fmt.Sprintf("failed to create bonus transaction for order %s: %s", v.OrderNumber, err.Error()))
 			return
 		}
+
+		foundUser, _, err := s.userService.Get(ctx, &userModel.GetPars{
+			ID: v.UserID,
+		})
+		if err != nil {
+			slog.Error("failed to get user")
+			return
+		}
+
+		err = s.userService.Update(ctx, &userModel.GetPars{
+			ID:      v.UserID,
+			Balance: foundUser.Balance + responseResult.Accrual,
+		})
+		if err != nil {
+			slog.Error("failed to update user balance")
+			return
+		}
 	}
+}
+
+func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsModel.GetPars) error {
+	foundUser, _, err := s.userService.Get(ctx, &userModel.GetPars{
+		ID: pars.UserID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if foundUser.Balance < pars.Sum {
+		return storage.ErrUserInsufficientBalance{}
+	}
+
+	_, orderExist, err := s.orderService.Get(ctx, &orderModel.GetPars{
+		OrderNumber: pars.OrderNumber,
+	})
+	if err != nil {
+		return err
+	}
+	if !orderExist {
+		return storage.ErrOrderNotExist{OrderNumber: pars.OrderNumber}
+	}
+
+	err = s.bonusTransactionsService.Create(ctx, pars)
+	if err != nil {
+		return err
+	}
+
+	err = s.userService.Update(ctx, &userModel.GetPars{
+		ID:      foundUser.ID,
+		Balance: foundUser.Balance - pars.Sum,
+	})
+	if err != nil {
+		return err
+	}
+
+	return err
 }

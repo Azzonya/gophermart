@@ -83,7 +83,9 @@ func (a *App) Init() {
 		orderUsecaseV := orderUsecase.New(a.orderService)
 
 		//bonus
-		a.bonusService = bonusService.New(a.accrualClient, a.bonusTransactionsService, a.orderService)
+		a.bonusService = bonusService.New(a.accrualClient, a.bonusTransactionsService, a.orderService, a.userService)
+
+		bonusTransactionsUsecaseV.SetBonusService(a.bonusService)
 
 		//handers
 		a.userHandlers = handler.New(authorizer, userUsecaseV, orderUsecaseV, bonusTransactionsUsecaseV, config.Conf.PgDsn)

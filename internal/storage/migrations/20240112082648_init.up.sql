@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
                                      id SERIAL PRIMARY KEY,
                                      login VARCHAR(255) NOT NULL UNIQUE,
                                      password VARCHAR(255) NOT NULL,
-                                     balance INT NOT NULL DEFAULT 0
+                                     balance DOUBLE PRECISION NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_user_login ON users (login);
@@ -25,7 +25,7 @@ CREATE TABLE bonus_transactions (
                                     user_id INT REFERENCES users(id) NOT NULL,
                                     processed_at timestamp with time zone default current_timestamp,
                                     transaction_type transaction_type_enum NOT NULL,
-                                    sum INT
+                                    sum DOUBLE PRECISION
 );
 
 CREATE INDEX idx_bonus_transactions_order_code ON bonus_transactions (order_code);
