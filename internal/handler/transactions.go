@@ -34,8 +34,8 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 	switch {
 	case errors.As(err, &storage.ErrUserInsufficientBalance{}):
 		c.JSON(http.StatusPaymentRequired, gin.H{"error": err.Error()})
-	case errors.As(err, &storage.ErrOrderNotExist{}):
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+	//case errors.As(err, &storage.ErrOrderNotExist{}):
+	//	c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
 	default:
