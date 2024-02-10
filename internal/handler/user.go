@@ -43,7 +43,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
 	if errS != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create JWT cookie", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create JWT cookie", "details": errS.Error()})
 		return
 	}
 
