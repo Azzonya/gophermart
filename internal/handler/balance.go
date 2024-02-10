@@ -8,16 +8,7 @@ import (
 
 func (u *UserHandlers) GetBalance(c *gin.Context) {
 	// Реализация получения баланса баллов лояльности пользователя
-	c.Header("Content-Type", "application/json")
-
-	userID, err := u.auth.GetUserIDFromCookie(c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get cookie",
-			"error":   err.Error(),
-		})
-		return
-	}
+	userID, _ := u.auth.GetUserIDFromCookie(c)
 
 	result, err := u.userUsecase.GetBalanceWithWithdrawn(c.Request.Context(), &userModel.GetPars{
 		ID: userID,

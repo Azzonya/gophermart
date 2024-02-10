@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/gin-gonic/gin"
@@ -33,30 +32,18 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 
 	newUser, err := u.userUsecase.Register(ctx, req)
 	if err != nil {
-		var notUniqErr storage.ErrUserNotUniq
-		if errors.As(err, &notUniqErr) {
-			c.JSON(http.StatusConflict, gin.H{
-				"error": err.Error(),
-			})
-
-			a := fmt.Sprintf(`{"error": "%s", "pg_dsn": "%s"}`, err.Error(), u.pgDsn+"1")
-
-			fmt.Println(a)
-			return
+		switch {
+		case errors.Is(err, storage.ErrUserNotUniq{}):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "details": err.Error()})
 		}
-		c.JSON(http.StatusRequestEntityTooLarge, gin.H{
-			"message": "Failed to register user",
-			"error":   err.Error(),
-		})
-
 		return
 	}
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
 	if errS != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": sessionCookie.String(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create JWT cookie", "details": err.Error()})
 		return
 	}
 
@@ -84,21 +71,14 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	err = c.BindJSON(req)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to read body",
-			"error":   err.Error(),
-		})
+	if err := c.BindJSON(req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body", "details": err.Error()})
 		return
 	}
 
 	foundUser, exist, err := u.userUsecase.CheckAuth(c.Request.Context(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to check auth",
-			"error":   err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check authentication", "details": err.Error()})
 		return
 	}
 	if !exist {
@@ -108,7 +88,7 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 
 	sessionCookie, errS := u.auth.CreateJWTCookie(foundUser)
 	if errS != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 

@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/domain/order"
+	"github.com/Azzonya/gophermart/internal/storage"
 )
 
 type Usecase struct {
@@ -13,10 +14,6 @@ func New(srv OrderServiceI) *Usecase {
 	return &Usecase{
 		srv: srv,
 	}
-}
-
-func (u *Usecase) IsLuhnValid(orderNumber string) bool {
-	return u.srv.IsLuhnValid(orderNumber)
 }
 
 func (u *Usecase) List(ctx context.Context, pars *order.ListPars) ([]*order.Order, error) {
@@ -32,6 +29,25 @@ func (u *Usecase) Get(ctx context.Context, pars *order.GetPars) (*order.Order, b
 }
 
 func (u *Usecase) Create(ctx context.Context, obj *order.GetPars) error {
+	if !u.srv.IsLuhnValid(obj.OrderNumber) {
+		return storage.ErrOrderNumberLuhnValid{OrderNumber: obj.OrderNumber}
+	}
+
+	foundOrder, orderExist, err := u.Get(ctx, &order.GetPars{
+		OrderNumber: obj.OrderNumber,
+	})
+	if err != nil {
+		return err
+	}
+
+	if orderExist {
+		if obj.UserID == foundOrder.UserID {
+			return storage.ErrOrderUploaded{OrderNumber: obj.OrderNumber}
+		} else {
+			return storage.ErrOrderUploadedByAnotherUser{OrderNumber: obj.OrderNumber}
+		}
+	}
+
 	return u.srv.Create(ctx, obj)
 }
 

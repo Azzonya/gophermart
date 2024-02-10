@@ -22,6 +22,12 @@ type BonusTransaction struct {
 	Sum             float32
 }
 
+type WithdrawalsResult struct {
+	OrderNumber string  `json:"order"`
+	Sum         float32 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
+}
+
 type TransactionType string
 
 const (

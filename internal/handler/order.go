@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"context"
+	"errors"
 	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
+	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -16,62 +17,27 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-
 	orderNumber := string(body)
+	userID, _ := u.auth.GetUserIDFromCookie(c)
 
-	if !u.orderUsecase.IsLuhnValid(orderNumber) {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
-		return
-	}
-
-	foundOrder, orderExist, err := u.orderUsecase.Get(ctx, &orderModel.GetPars{
-		OrderNumber: orderNumber,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get order",
-			"error":   err.Error(),
-		})
-		return
-	}
-	userID, err := u.auth.GetUserIDFromCookie(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to get cookie",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	if orderExist {
-		if userID == foundOrder.UserID {
-			c.JSON(http.StatusOK, gin.H{
-				"message": "already uploaded",
-			})
-			return
-		} else {
-			c.JSON(http.StatusConflict, gin.H{
-				"message": "already uploaded by different user",
-			})
-			return
-		}
-	}
-
-	err = u.orderUsecase.Create(context.Background(), &orderModel.GetPars{
+	err = u.orderUsecase.Create(c.Request.Context(), &orderModel.GetPars{
 		OrderNumber: orderNumber,
 		Status:      orderModel.OrderStatusNew,
 		UserID:      userID,
 	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create order",
-			"error":   err.Error(),
-		})
-		return
-	}
 
-	c.JSON(http.StatusAccepted, nil)
+	switch {
+	case errors.Is(err, storage.ErrOrderNumberLuhnValid{}):
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
+	case errors.Is(err, storage.ErrOrderUploaded{}):
+		c.JSON(http.StatusOK, gin.H{"message": "already uploaded"})
+	case errors.Is(err, storage.ErrOrderUploadedByAnotherUser{}):
+		c.JSON(http.StatusConflict, gin.H{"message": "already uploaded by different user"})
+	case err != nil:
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create order", "error": err.Error()})
+	default:
+		c.JSON(http.StatusAccepted, nil)
+	}
 }
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {
@@ -95,6 +61,5 @@ func (u *UserHandlers) GetOrders(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Type", "application/json; charset=utf-8")
 	c.JSON(http.StatusOK, orders)
 }

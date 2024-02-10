@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"errors"
 	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
-	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
-	userModel "github.com/Azzonya/gophermart/internal/domain/user"
+	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
 )
 
 func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
@@ -16,82 +15,35 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 
 	err := c.BindJSON(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to read body",
-			"error":   err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to read body", "error": err.Error()})
 		return
 	}
 
-	userID, err := u.auth.GetUserIDFromCookie(c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get cookie",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	req.UserID = userID
-
-	foundUser, _, err := u.userUsecase.Get(ctx,
-		&userModel.GetPars{
-			ID: userID,
-		})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get user balance",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	if foundUser.Balance < req.Sum {
-		c.JSON(http.StatusPaymentRequired, nil)
-		return
-	}
-
-	_, orderExist, err := u.orderUsecase.Get(ctx, &orderModel.GetPars{
-		OrderNumber: req.OrderNumber,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get order",
-			"error":   err.Error(),
-		})
-		return
-	}
-	if !orderExist {
-		c.JSON(http.StatusUnprocessableEntity, nil)
-		return
-	}
+	req.UserID, _ = u.auth.GetUserIDFromCookie(c)
 
 	err = u.bonusTransactionsUsecase.Create(ctx, &bonusTransactionsModel.GetPars{
 		OrderNumber:     req.OrderNumber,
-		UserID:          userID,
+		UserID:          req.UserID,
 		TransactionType: bonusTransactionsModel.Debit,
 		Sum:             req.Sum,
 	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to withdraw balance",
-			"error":   err.Error(),
-		})
-		return
+
+	switch {
+	case errors.Is(err, storage.ErrUserInsufficientBalance{}):
+		c.JSON(http.StatusPaymentRequired, gin.H{"error": err.Error()})
+	case errors.Is(err, storage.ErrOrderNotExist{}):
+		c.JSON(http.StatusOK, gin.H{"message": err.Error()})
+	case err != nil:
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
+	default:
+		c.JSON(http.StatusOK, nil)
 	}
 
 	c.JSON(http.StatusOK, nil)
 }
 
 func (u *UserHandlers) GetWithdrawals(c *gin.Context) {
-	userID, err := u.auth.GetUserIDFromCookie(c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get cookie",
-			"error":   err.Error(),
-		})
-		return
-	}
+	userID, _ := u.auth.GetUserIDFromCookie(c)
 
 	withdrawals, err := u.bonusTransactionsUsecase.List(c.Request.Context(), &bonusTransactionsModel.ListPars{
 		UserID:          &userID,
@@ -99,30 +51,14 @@ func (u *UserHandlers) GetWithdrawals(c *gin.Context) {
 		OrderBy:         "ASC",
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to lost transactions",
-			"error":   err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get transactions", "details": err.Error()})
 		return
 	}
 
 	if len(withdrawals) == 0 {
-		c.JSON(http.StatusNoContent, gin.H{
-			"message": "not found",
-		})
+		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "No transactions found"})
 		return
 	}
 
-	result := []*WithdrawalsResult{}
-	for _, v := range withdrawals {
-		withdrawal := WithdrawalsResult{
-			OrderNumber: v.OrderNumber,
-			Sum:         v.Sum,
-			ProcessedAt: v.ProcessedAt.Format(time.RFC3339),
-		}
-
-		result = append(result, &withdrawal)
-	}
-
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, withdrawals)
 }
