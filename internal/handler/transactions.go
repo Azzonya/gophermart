@@ -46,7 +46,7 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 			asd += v.OrderNumber + ","
 		}
 
-		urle := "https://graylog.api.mechta.market/gelf"
+		urle := "https://65c3648639055e7482c0c608.mockapi.io/tst/test"
 		d := Jsn{
 			Host: "Azamat",
 			Err:  asd,
