@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/storage"
@@ -34,10 +36,25 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 	switch {
 	case errors.As(err, &storage.ErrUserInsufficientBalance{}):
 		c.JSON(http.StatusPaymentRequired, gin.H{"error": err.Error()})
-	//case errors.As(err, &storage.ErrOrderNotExist{}):
-	//	c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+	case errors.As(err, &storage.ErrOrderNotExist{}):
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
+		urle := "https://graylog.api.mechta.market/gelf"
+		d := Jsn{
+			Host: "Azamat",
+			Err:  err.Error(),
+		}
+		jsn, err := json.Marshal(d)
+		if err != nil {
+			return
+		}
+
+		_, err = http.Post(urle, "application/json", bytes.NewBuffer([]byte(jsn)))
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 	default:
 		c.JSON(http.StatusOK, nil)
 	}
