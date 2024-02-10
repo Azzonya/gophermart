@@ -12,14 +12,6 @@ func (err ErrUserNotUniq) Error() string {
 	return fmt.Sprintf("user with login \"%s\" already exists", err.Login)
 }
 
-type ErrOrderNotExist struct {
-	OrderNumber string
-}
-
-func (err ErrOrderNotExist) Error() string {
-	return fmt.Sprintf("order with number - \"%s\" not exist", err.OrderNumber)
-}
-
 type ErrOrderNumberLuhnValid struct {
 	OrderNumber string
 }

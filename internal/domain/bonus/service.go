@@ -152,16 +152,6 @@ func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsMo
 		return storage.ErrUserInsufficientBalance{}
 	}
 
-	//_, orderExist, err := s.orderService.Get(ctx, &orderModel.GetPars{
-	//	OrderNumber: pars.OrderNumber,
-	//})
-	//if err != nil {
-	//	return err
-	//}
-	//if !orderExist {
-	//	return storage.ErrOrderNotExist{OrderNumber: pars.OrderNumber}
-	//}
-
 	err = s.bonusTransactionsService.Create(ctx, pars)
 	if err != nil {
 		return err
