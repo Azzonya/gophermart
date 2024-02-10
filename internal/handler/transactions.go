@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
+	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
 	"github.com/Azzonya/gophermart/internal/storage"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -38,12 +39,17 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 		c.JSON(http.StatusPaymentRequired, gin.H{"error": err.Error()})
 	case errors.As(err, &storage.ErrOrderNotExist{}):
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
-	case err != nil:
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
+		orders, _ := u.orderUsecase.List(c.Request.Context(), &orderModel.ListPars{})
+
+		asd := ""
+		for _, v := range orders {
+			asd += v.OrderNumber + ","
+		}
+
 		urle := "https://graylog.api.mechta.market/gelf"
 		d := Jsn{
 			Host: "Azamat",
-			Err:  err.Error(),
+			Err:  asd,
 		}
 		jsn, err := json.Marshal(d)
 		if err != nil {
@@ -55,6 +61,8 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
+	case err != nil:
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
 	default:
 		c.JSON(http.StatusOK, nil)
 	}
