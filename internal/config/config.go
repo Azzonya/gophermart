@@ -15,7 +15,7 @@ var Conf = struct {
 func init() {
 	flag.StringVar(&Conf.RunAddress, "a", "localhost:8095", "address and port where server start")
 	flag.StringVar(&Conf.PgDsn, "d", "", "database connection line")
-	flag.StringVar(&Conf.AccrualSystemAddress, "r", "http://localhost:8080/", "accrual system address")
+	flag.StringVar(&Conf.AccrualSystemAddress, "r", "http://localhost:8080", "accrual system address")
 
 	if err := env.Parse(&Conf); err != nil {
 		panic(err)

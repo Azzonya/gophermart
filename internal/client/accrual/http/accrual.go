@@ -21,7 +21,7 @@ func New(uri string) *Client {
 }
 
 func (c *Client) Send(orderNumber string) (*RequestResult, error) {
-	url := fmt.Sprintf("%sapi/orders/%s", c.baseURL, orderNumber)
+	url := fmt.Sprintf("%s/api/orders/%s", c.baseURL, orderNumber)
 
 	// Создаем новый HTTP-запрос
 	req, err := http.NewRequest("GET", url, nil)
