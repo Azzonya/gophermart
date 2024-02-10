@@ -103,7 +103,7 @@ func (a *App) Start() {
 
 	// services
 	{
-		a.bonusService.Start(10 * time.Second)
+		a.bonusService.Start(context.Background(), 10*time.Second)
 	}
 
 	// http server
