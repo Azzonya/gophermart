@@ -27,11 +27,11 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 	})
 
 	switch {
-	case errors.Is(err, storage.ErrOrderNumberLuhnValid{}):
+	case errors.As(err, &storage.ErrOrderNumberLuhnValid{}):
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
-	case errors.Is(err, storage.ErrOrderUploaded{}):
+	case errors.As(err, &storage.ErrOrderUploaded{}):
 		c.JSON(http.StatusOK, gin.H{"message": "already uploaded"})
-	case errors.Is(err, storage.ErrOrderUploadedByAnotherUser{}):
+	case errors.As(err, &storage.ErrOrderUploadedByAnotherUser{}):
 		c.JSON(http.StatusConflict, gin.H{"message": "already uploaded by different user"})
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create order", "error": err.Error()})
