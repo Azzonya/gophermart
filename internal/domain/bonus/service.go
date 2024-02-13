@@ -97,7 +97,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			}
 		}
 
-		_, exist, err := s.bonusTransactionsService.Get(ctx, &bonusTransactionsModel.GetPars{
+		bonusTransaction, err := s.bonusTransactionsService.Get(ctx, &bonusTransactionsModel.GetPars{
 			OrderNumber:     v.OrderNumber,
 			TransactionType: bonusTransactionsModel.Accrual,
 		})
@@ -105,7 +105,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			slog.Error(fmt.Sprintf("failed to check bonus transaction existence for order %s: %s", v.OrderNumber, err.Error()))
 			return
 		}
-		if exist {
+		if bonusTransaction != nil {
 			slog.Error(fmt.Sprintf("bonus transaction with order number %s already exists", v.OrderNumber))
 			return
 		}
@@ -121,7 +121,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			return
 		}
 
-		foundUser, _, err := s.userService.Get(ctx, &userModel.GetPars{
+		foundUser, err := s.userService.Get(ctx, &userModel.GetPars{
 			ID: v.UserID,
 		})
 		if err != nil {
@@ -141,7 +141,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 }
 
 func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsModel.GetPars) error {
-	foundUser, _, err := s.userService.Get(ctx, &userModel.GetPars{
+	foundUser, err := s.userService.Get(ctx, &userModel.GetPars{
 		ID: pars.UserID,
 	})
 	if err != nil {

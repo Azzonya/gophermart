@@ -45,7 +45,7 @@ func (u *Usecase) Create(ctx context.Context, obj *bonustransactions.GetPars) er
 	return u.srv.Create(ctx, obj)
 }
 
-func (u *Usecase) Get(ctx context.Context, pars *bonustransactions.GetPars) (*bonustransactions.BonusTransaction, bool, error) {
+func (u *Usecase) Get(ctx context.Context, pars *bonustransactions.GetPars) (*bonustransactions.BonusTransaction, error) {
 	return u.srv.Get(ctx, pars)
 }
 

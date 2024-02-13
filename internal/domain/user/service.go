@@ -51,7 +51,7 @@ func (s *Service) Register(ctx context.Context, user *GetPars) (*User, error) {
 		return nil, err
 	}
 
-	u, _, err := s.repoDB.Get(ctx, &GetPars{
+	u, err := s.repoDB.Get(ctx, &GetPars{
 		Login: user.Login,
 	})
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *Service) Register(ctx context.Context, user *GetPars) (*User, error) {
 }
 
 func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *GetPars) (*UserBalance, error) {
-	user, _, err := s.Get(ctx, pars)
+	user, err := s.Get(ctx, pars)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *Service) Create(ctx context.Context, obj *GetPars) error {
 	return s.repoDB.Create(ctx, obj)
 }
 
-func (s *Service) Get(ctx context.Context, pars *GetPars) (*User, bool, error) {
+func (s *Service) Get(ctx context.Context, pars *GetPars) (*User, error) {
 	return s.repoDB.Get(ctx, pars)
 }
 

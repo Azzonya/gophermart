@@ -8,7 +8,7 @@ import (
 type RepoDBIntreface interface {
 	List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, error)
 	Create(ctx context.Context, obj *GetPars) error
-	Get(ctx context.Context, pars *GetPars) (*BonusTransaction, bool, error)
+	Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error)
 	Update(ctx context.Context, pars *GetPars) error
 	Delete(ctx context.Context, pars *GetPars) error
 	Exists(ctx context.Context, login string) (bool, error)

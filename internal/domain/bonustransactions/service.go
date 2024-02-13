@@ -22,7 +22,7 @@ func (s *Service) Create(ctx context.Context, obj *GetPars) error {
 	return s.repoDB.Create(ctx, obj)
 }
 
-func (s *Service) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, bool, error) {
+func (s *Service) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error) {
 	return s.repoDB.Get(ctx, pars)
 }
 

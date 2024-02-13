@@ -34,13 +34,13 @@ func (u *Usecase) HashPassword(password string) (string, error) {
 func (u *Usecase) CheckAuth(ctx context.Context, pars *user.GetPars) (*user.User, bool, error) {
 	var result bool
 
-	userFound, exist, err := u.srv.Get(ctx, &user.GetPars{
+	userFound, err := u.srv.Get(ctx, &user.GetPars{
 		Login: pars.Login,
 	})
 	if err != nil {
 		return nil, false, err
 	}
-	if exist {
+	if userFound != nil {
 		result = u.IsValidPassword(userFound.Password, pars.Password)
 	}
 
@@ -59,7 +59,7 @@ func (u *Usecase) Create(ctx context.Context, obj *user.GetPars) error {
 	return u.srv.Create(ctx, obj)
 }
 
-func (u *Usecase) Get(ctx context.Context, pars *user.GetPars) (*user.User, bool, error) {
+func (u *Usecase) Get(ctx context.Context, pars *user.GetPars) (*user.User, error) {
 	return u.srv.Get(ctx, pars)
 }
 

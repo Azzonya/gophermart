@@ -72,7 +72,7 @@ func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, error) {
 	var values []interface{}
 	var result User
 	values = make([]interface{}, 0)
@@ -107,12 +107,12 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, bool, error) {
 	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.ID, &result.Login, &result.Password, &result.Balance)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, false, nil
+			return nil, nil
 		}
-		return nil, false, err
+		return nil, err
 	}
 
-	return &result, result.Login != "", err
+	return &result, err
 }
 
 func (r *Repo) Update(ctx context.Context, pars *GetPars) error {

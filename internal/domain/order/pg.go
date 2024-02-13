@@ -99,7 +99,7 @@ func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, bool, error) {
+func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, error) {
 	var values []interface{}
 	var result Order
 	values = make([]interface{}, 0)
@@ -133,12 +133,12 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, bool, error) {
 	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.OrderNumber, &result.UploadedAt, &result.Status, &result.UserID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, false, nil
+			return nil, nil
 		}
-		return nil, false, err
+		return nil, err
 	}
 
-	return &result, result.OrderNumber != "", nil
+	return &result, nil
 }
 
 func (r *Repo) Update(ctx context.Context, pars *GetPars) error {

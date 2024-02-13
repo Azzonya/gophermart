@@ -7,7 +7,7 @@ import (
 
 type WithdrawalServiceI interface {
 	List(ctx context.Context, pars *bonustransactions.ListPars) ([]*bonustransactions.BonusTransaction, error)
-	Get(ctx context.Context, pars *bonustransactions.GetPars) (*bonustransactions.BonusTransaction, bool, error)
+	Get(ctx context.Context, pars *bonustransactions.GetPars) (*bonustransactions.BonusTransaction, error)
 	Create(ctx context.Context, obj *bonustransactions.GetPars) error
 	Update(ctx context.Context, pars *bonustransactions.GetPars) error
 	Delete(ctx context.Context, pars *bonustransactions.GetPars) error

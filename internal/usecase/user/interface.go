@@ -12,7 +12,7 @@ type UserServiceI interface {
 	GetBalanceWithWithdrawn(ctx context.Context, pars *user.GetPars) (*user.UserBalance, error)
 	Register(ctx context.Context, user *user.GetPars) (*user.User, error)
 	List(ctx context.Context, pars *user.ListPars) ([]*user.User, error)
-	Get(ctx context.Context, pars *user.GetPars) (*user.User, bool, error)
+	Get(ctx context.Context, pars *user.GetPars) (*user.User, error)
 	Create(ctx context.Context, obj *user.GetPars) error
 	Update(ctx context.Context, pars *user.GetPars) error
 	Delete(ctx context.Context, pars *user.GetPars) error

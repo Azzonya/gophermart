@@ -24,7 +24,7 @@ func (u *Usecase) ListWithAccrual(ctx context.Context, pars *order.ListPars) ([]
 	return u.srv.ListWithAccrual(ctx, pars)
 }
 
-func (u *Usecase) Get(ctx context.Context, pars *order.GetPars) (*order.Order, bool, error) {
+func (u *Usecase) Get(ctx context.Context, pars *order.GetPars) (*order.Order, error) {
 	return u.srv.Get(ctx, pars)
 }
 
@@ -33,14 +33,14 @@ func (u *Usecase) Create(ctx context.Context, obj *order.GetPars) error {
 		return storage.ErrOrderNumberLuhnValid{OrderNumber: obj.OrderNumber}
 	}
 
-	foundOrder, orderExist, err := u.Get(ctx, &order.GetPars{
+	foundOrder, err := u.Get(ctx, &order.GetPars{
 		OrderNumber: obj.OrderNumber,
 	})
 	if err != nil {
 		return err
 	}
 
-	if orderExist {
+	if foundOrder != nil {
 		if obj.UserID == foundOrder.UserID {
 			return storage.ErrOrderUploaded{OrderNumber: obj.OrderNumber}
 		} else {
