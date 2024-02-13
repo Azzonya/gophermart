@@ -17,7 +17,7 @@ type Jsn struct {
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	var err error
 
-	req := &userModel.GetPars{}
+	req := &userModel.User{}
 
 	ctx := c.Request.Context()
 

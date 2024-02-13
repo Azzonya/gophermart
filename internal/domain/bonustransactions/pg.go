@@ -86,7 +86,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, e
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *BonusTransaction) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO bonus_transactions (order_code, user_id, transaction_type, sum) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
 	return err
 }

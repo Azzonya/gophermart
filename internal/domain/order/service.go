@@ -100,7 +100,7 @@ func (s *Service) ListWithAccrual(ctx context.Context, pars *ListPars) ([]*Order
 	return result, nil
 }
 
-func (s *Service) Create(ctx context.Context, obj *GetPars) error {
+func (s *Service) Create(ctx context.Context, obj *Order) error {
 	return s.repoDB.Create(ctx, obj)
 }
 

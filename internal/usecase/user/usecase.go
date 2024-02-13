@@ -19,7 +19,7 @@ func (u *Usecase) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 	return u.srv.IsLoginTaken(ctx, login)
 }
 
-func (u *Usecase) Register(ctx context.Context, user *user.GetPars) (*user.User, error) {
+func (u *Usecase) Register(ctx context.Context, user *user.User) (*user.User, error) {
 	return u.srv.Register(ctx, user)
 }
 
@@ -55,7 +55,7 @@ func (u *Usecase) List(ctx context.Context, pars *user.ListPars) ([]*user.User, 
 	return u.srv.List(ctx, pars)
 }
 
-func (u *Usecase) Create(ctx context.Context, obj *user.GetPars) error {
+func (u *Usecase) Create(ctx context.Context, obj *user.User) error {
 	return u.srv.Create(ctx, obj)
 }
 

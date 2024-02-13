@@ -18,7 +18,7 @@ func (s *Service) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction
 	return s.repoDB.List(ctx, pars)
 }
 
-func (s *Service) Create(ctx context.Context, obj *GetPars) error {
+func (s *Service) Create(ctx context.Context, obj *BonusTransaction) error {
 	return s.repoDB.Create(ctx, obj)
 }
 

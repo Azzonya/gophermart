@@ -28,7 +28,7 @@ func (u *Usecase) Get(ctx context.Context, pars *order.GetPars) (*order.Order, e
 	return u.srv.Get(ctx, pars)
 }
 
-func (u *Usecase) Create(ctx context.Context, obj *order.GetPars) error {
+func (u *Usecase) Create(ctx context.Context, obj *order.Order) error {
 	if !u.srv.IsLuhnValid(obj.OrderNumber) {
 		return storage.ErrOrderNumberLuhnValid{OrderNumber: obj.OrderNumber}
 	}

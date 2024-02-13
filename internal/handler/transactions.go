@@ -24,7 +24,7 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 
 	req.UserID, _ = u.auth.GetUserIDFromCookie(c)
 
-	err = u.bonusTransactionsUsecase.WithdrawBalance(ctx, &bonusTransactionsModel.GetPars{
+	err = u.bonusTransactionsUsecase.WithdrawBalance(ctx, &bonusTransactionsModel.BonusTransaction{
 		OrderNumber:     req.OrderNumber,
 		UserID:          req.UserID,
 		TransactionType: bonusTransactionsModel.Debit,

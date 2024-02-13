@@ -39,7 +39,7 @@ func (s *Service) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 	return s.repoDB.Exists(ctx, login)
 }
 
-func (s *Service) Register(ctx context.Context, user *GetPars) (*User, error) {
+func (s *Service) Register(ctx context.Context, user *User) (*User, error) {
 	var err error
 	user.Password, err = s.HashPassword(user.Password)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *Service) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 	return s.repoDB.List(ctx, pars)
 }
 
-func (s *Service) Create(ctx context.Context, obj *GetPars) error {
+func (s *Service) Create(ctx context.Context, obj *User) error {
 	return s.repoDB.Create(ctx, obj)
 }
 

@@ -20,7 +20,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 	orderNumber := string(body)
 	userID, _ := u.auth.GetUserIDFromCookie(c)
 
-	err = u.orderUsecase.Create(c.Request.Context(), &orderModel.GetPars{
+	err = u.orderUsecase.Create(c.Request.Context(), &orderModel.Order{
 		OrderNumber: orderNumber,
 		Status:      orderModel.OrderStatusNew,
 		UserID:      userID,

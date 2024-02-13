@@ -93,7 +93,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *Order) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO orders (code, status, user_id) VALUES ($1, $2, $3);", obj.OrderNumber, obj.Status, obj.UserID)
 
 	return err

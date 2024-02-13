@@ -61,7 +61,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 	return result, err
 }
 
-func (r *Repo) Create(ctx context.Context, obj *GetPars) error {
+func (r *Repo) Create(ctx context.Context, obj *User) error {
 	_, err := r.Con.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
 	if err != nil {
 		var pgErr *pgconn.PgError

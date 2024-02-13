@@ -110,7 +110,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			return
 		}
 
-		err = s.bonusTransactionsService.Create(ctx, &bonusTransactionsModel.GetPars{
+		err = s.bonusTransactionsService.Create(ctx, &bonusTransactionsModel.BonusTransaction{
 			OrderNumber:     v.OrderNumber,
 			UserID:          v.UserID,
 			TransactionType: bonusTransactionsModel.Accrual,
@@ -140,7 +140,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 	}
 }
 
-func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsModel.GetPars) error {
+func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsModel.BonusTransaction) error {
 	foundUser, err := s.userService.Get(ctx, &userModel.GetPars{
 		ID: pars.UserID,
 	})

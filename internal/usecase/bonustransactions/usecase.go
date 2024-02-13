@@ -41,7 +41,7 @@ func (u *Usecase) List(ctx context.Context, pars *bonustransactions.ListPars) ([
 	return result, nil
 }
 
-func (u *Usecase) Create(ctx context.Context, obj *bonustransactions.GetPars) error {
+func (u *Usecase) Create(ctx context.Context, obj *bonustransactions.BonusTransaction) error {
 	return u.srv.Create(ctx, obj)
 }
 
@@ -61,6 +61,6 @@ func (u *Usecase) Exists(ctx context.Context, orderNumber string) (bool, error) 
 	return u.srv.Exists(ctx, orderNumber)
 }
 
-func (u *Usecase) WithdrawBalance(ctx context.Context, pars *bonustransactions.GetPars) error {
+func (u *Usecase) WithdrawBalance(ctx context.Context, pars *bonustransactions.BonusTransaction) error {
 	return u.bonus.WithdrawBalance(ctx, pars)
 }

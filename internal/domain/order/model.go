@@ -14,7 +14,7 @@ type Order struct {
 
 type RepoDBI interface {
 	List(ctx context.Context, pars *ListPars) ([]*Order, error)
-	Create(ctx context.Context, obj *GetPars) error
+	Create(ctx context.Context, obj *Order) error
 	Get(ctx context.Context, pars *GetPars) (*Order, error)
 	Update(ctx context.Context, pars *GetPars) error
 	Delete(ctx context.Context, pars *GetPars) error
