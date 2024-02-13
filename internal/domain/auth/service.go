@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	userModel "github.com/Azzonya/gophermart/internal/domain/user"
-	userService "github.com/Azzonya/gophermart/internal/usecase/user"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"net/http"
@@ -22,8 +21,7 @@ type Claims struct {
 }
 
 type Auth struct {
-	userService *userService.UserServiceI
-	JwtSecret   string
+	JwtSecret string
 }
 
 func New(jwtSecret string) *Auth {
