@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/Azzonya/gophermart/internal/storage"
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -22,89 +22,93 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 }
 
 func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
-	var result []*User
-	var values = make([]interface{}, 0)
-
-	query := "SELECT * FROM users WHERE true"
+	queryBuilder := squirrel.Select("*").From("users").Where(squirrel.Eq{"true": true})
 
 	if pars.Login != nil {
-		query += " AND login = $1"
-		values = append(values, *pars.Login)
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"login": *pars.Login})
 	}
 
 	if pars.MaxBalance != nil {
-		query += " AND balance <= $2"
-		values = append(values, *pars.MaxBalance)
+		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"balance": *pars.MaxBalance})
 	}
 
 	if pars.MinBalance != nil {
-		query += " AND balance <= $3"
-		values = append(values, *pars.MinBalance)
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"balance": *pars.MinBalance})
 	}
 
-	rows, err := r.Con.Query(ctx, query, values...)
+	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
+	rows, err := r.Con.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
+
+	var result []*User
+
 	for rows.Next() {
 		var userFound User
 		err = rows.Scan(&userFound.ID, &userFound.Login, &userFound.Password, &userFound.Balance)
 		if err != nil {
 			return nil, err
 		}
-
 		result = append(result, &userFound)
 	}
 
-	return result, err
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (r *Repo) Create(ctx context.Context, obj *User) error {
-	_, err := r.Con.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2);", obj.Login, obj.Password)
+	queryBuilder := squirrel.Insert("users").
+		Columns("login", "password").
+		Values(obj.Login, obj.Password)
+
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		return err
+	}
+
+	_, err = r.Con.Exec(ctx, sql, args...)
+	if err != nil {
+		if pgerr, ok := err.(*pgconn.PgError); ok && pgerr.Code == pgerrcode.UniqueViolation {
 			return storage.ErrUserNotUniq{Login: obj.Login}
 		}
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, error) {
-	var values []interface{}
-	var result User
-	values = make([]interface{}, 0)
+	queryBuilder := squirrel.Select("*").From("users").Where(squirrel.Expr("true"))
 
-	query := "SELECT * FROM users WHERE true"
-
-	paramNum := 1
 	if len(pars.ID) != 0 {
-		query += fmt.Sprintf(" AND id = $%d", paramNum)
-		values = append(values, pars.ID)
-		paramNum += 1
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"id": pars.ID})
 	}
-
 	if len(pars.Login) != 0 {
-		query += fmt.Sprintf(" AND login = $%d", paramNum)
-		values = append(values, pars.Login)
-		paramNum += 1
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"login": pars.Login})
 	}
-
 	if pars.Balance != 0 {
-		query += fmt.Sprintf(" AND balance = $%d", paramNum)
-		values = append(values, pars.Balance)
-		paramNum += 1
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"balance": pars.Balance})
 	}
-
 	if len(pars.Password) != 0 {
-		query += fmt.Sprintf(" AND password = $%d", paramNum)
-		values = append(values, pars.Password)
-		paramNum += 1
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"password": pars.Password})
 	}
 
-	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.ID, &result.Login, &result.Password, &result.Balance)
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var result User
+	err = r.Con.QueryRow(ctx, sql, args...).Scan(&result.ID, &result.Login, &result.Password, &result.Balance)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -112,60 +116,57 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, error) {
 		return nil, err
 	}
 
-	return &result, err
+	return &result, nil
 }
 
 func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
-	var values []interface{}
-	values = make([]interface{}, 0)
+	queryBuilder := squirrel.Update("users")
 
-	query := "UPDATE users"
-
-	paramNum := 1
 	if len(pars.Login) != 0 {
-		query += fmt.Sprintf(" SET login = $%d", paramNum)
-		values = append(values, pars.Login)
-		paramNum++
+		queryBuilder = queryBuilder.Set("login", pars.Login)
 	}
-
 	if len(pars.Password) != 0 {
-		if len(values) > 0 {
-			query += ","
-		} else {
-			query += " SET"
-		}
-		query += fmt.Sprintf(" password = $%d", paramNum)
-		values = append(values, pars.Password)
-		paramNum++
+		queryBuilder = queryBuilder.Set("password", pars.Password)
 	}
-
 	if pars.Balance != 0 {
-		if len(values) > 0 {
-			query += ","
-		} else {
-			query += " SET"
-		}
-		query += fmt.Sprintf(" balance = $%d", paramNum)
-		values = append(values, pars.Balance)
-		paramNum++
+		queryBuilder = queryBuilder.Set("balance", pars.Balance)
 	}
 
-	query += fmt.Sprintf(" WHERE id = '%s'", pars.ID)
+	queryBuilder = queryBuilder.Where(squirrel.Eq{"id": pars.ID})
 
-	_, err := r.Con.Exec(ctx, query, values...)
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
 
+	_, err = r.Con.Exec(ctx, sql, args...)
 	return err
 }
 
 func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
-	_, err := r.Con.Exec(ctx, "DELETE FROM users WHERE login = $1;", pars.Login)
+	queryBuilder := squirrel.Delete("users")
+
+	queryBuilder = queryBuilder.Where(squirrel.Eq{"login": pars.Login})
+
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.Con.Exec(ctx, sql, args...)
 	return err
 }
 
 func (r *Repo) Exists(ctx context.Context, login string) (bool, error) {
-	var exist bool
+	existsQuery := squirrel.Select("SELECT EXISTS (SELECT 1 FROM users WHERE login = ?);", login)
 
-	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM users WHERE login = $1);", login).Scan(&exist)
+	query, args, err := existsQuery.ToSql()
+	if err != nil {
+		return false, err
+	}
+
+	var exist bool
+	err = r.Con.QueryRow(ctx, query, args...).Scan(&exist)
 	if err != nil {
 		return false, err
 	}
