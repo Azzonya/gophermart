@@ -2,8 +2,8 @@ package bonustransactions
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -19,188 +19,194 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 }
 
 func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, error) {
-	var result []*BonusTransaction
-	var values []interface{}
-	query := "SELECT * FROM bonus_transactions WHERE true"
+	queryBuilder := squirrel.Select("*").From("bonus_transactions").Where(squirrel.Eq{"true": true})
+	var values = make(map[string]interface{})
 
-	paramNum := 1
 	if pars.ProcessedAfter != nil && !pars.ProcessedAfter.IsZero() {
-		query += fmt.Sprintf(" AND processed_at >= $%d", paramNum)
-		values = append(values, pars.ProcessedAfter)
-		paramNum += 1
+		values["processed_at"] = pars.ProcessedAfter
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"processed_at": values["processed_at"]})
 	}
 
 	if pars.ProcessedBefore != nil && !pars.ProcessedBefore.IsZero() {
-		query += fmt.Sprintf(" AND processed_at <= $%d", paramNum)
-		values = append(values, pars.ProcessedBefore)
-		paramNum += 1
+		values["processed_at"] = pars.ProcessedBefore
+		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"processed_at": values["processed_at"]})
 	}
 
 	if pars.TransactionType != "" {
-		query += fmt.Sprintf(" AND transaction_type = $%d", paramNum)
-		values = append(values, pars.TransactionType)
-		paramNum += 1
+		values["transaction_type"] = pars.TransactionType
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"transaction_type": values["transaction_type"]})
 	}
 
 	if pars.MaxSum != nil {
-		query += fmt.Sprintf(" AND sum <= $%d", paramNum)
-		values = append(values, *pars.MaxSum)
-		paramNum += 1
+		values["sum"] = *pars.MaxSum
+		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"sum": values["sum"]})
 	}
 
 	if pars.MinSum != nil {
-		query += fmt.Sprintf(" AND sum >= $%d", paramNum)
-		values = append(values, *pars.MinSum)
-		paramNum += 1
+		values["sum"] = *pars.MinSum
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"sum": values["sum"]})
 	}
 
 	if pars.UserID != nil {
-		query += fmt.Sprintf(" AND user_id >= $%d", paramNum)
-		values = append(values, *pars.UserID)
-		paramNum += 1
+		values["user_id"] = *pars.UserID
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"user_id": values["user_id"]})
 	}
 
 	if len(pars.OrderBy) != 0 {
-		query += fmt.Sprintf(" ORDER BY processed_at %s", pars.OrderBy)
+		queryBuilder = queryBuilder.OrderBy(fmt.Sprintf("processed_at %s", pars.OrderBy))
 	}
 
-	rows, err := r.Con.Query(ctx, query, values...)
+	sql, args, err := queryBuilder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.Con.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
+
+	var result []*BonusTransaction
 	for rows.Next() {
 		bonusTransaction := BonusTransaction{}
 		err = rows.Scan(&bonusTransaction.OrderNumber, &bonusTransaction.UserID, &bonusTransaction.ProcessedAt, &bonusTransaction.TransactionType, &bonusTransaction.Sum)
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, nil
-			}
 			return nil, err
 		}
 
 		result = append(result, &bonusTransaction)
 	}
 
-	return result, err
+	return result, nil
 }
 
 func (r *Repo) Create(ctx context.Context, obj *BonusTransaction) error {
-	_, err := r.Con.Exec(ctx, "INSERT INTO bonus_transactions (order_code, user_id, transaction_type, sum) VALUES ($1, $2, $3, $4);", obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
+	insert := squirrel.Insert("bonus_transactions").
+		Columns("order_code", "user_id", "transaction_type", "sum").
+		Values(obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
+
+	query, args, err := insert.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.Con.Exec(ctx, query, args...)
 	return err
 }
 
 func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error) {
-	var values []interface{}
-	var result BonusTransaction
-	query := "SELECT * FROM bonus_transactions WHERE true"
+	queryBuilder := squirrel.Select("*").From("bonus_transactions").Where(squirrel.Eq{"true": true})
 
-	paramNum := 1
+	var values = make(map[string]interface{})
+
 	if len(pars.OrderNumber) != 0 {
-		query += fmt.Sprintf(" AND sum = $%d", paramNum)
-		values = append(values, pars.Sum)
-		paramNum += 1
+		values["order_code"] = pars.OrderNumber
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"order_code": values["order_code"]})
 	}
 
 	if !pars.ProcessedAt.IsZero() {
-		query += fmt.Sprintf(" AND processed_at = $%d", paramNum)
-		values = append(values, pars.ProcessedAt)
-		paramNum += 1
+		values["processed_at"] = pars.ProcessedAt
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"processed_at": values["processed_at"]})
 	}
 
 	if pars.Sum != 0 {
-		query += fmt.Sprintf(" AND order_code = $%d", paramNum)
-		values = append(values, pars.Sum)
-		paramNum += 1
+		values["sum"] = pars.Sum
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"sum": values["sum"]})
 	}
 
 	if len(pars.TransactionType) != 0 {
-		query += fmt.Sprintf(" AND transaction_type = $%d", paramNum)
-		values = append(values, pars.TransactionType)
-		paramNum += 1
+		values["transaction_type"] = pars.TransactionType
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"transaction_type": values["transaction_type"]})
 	}
 
 	if len(pars.UserID) != 0 {
-		query += fmt.Sprintf(" AND user_id = $%d", paramNum)
-		values = append(values, pars.UserID)
-		paramNum += 1
+		values["user_id"] = pars.UserID
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": values["user_id"]})
 	}
 
-	err := r.Con.QueryRow(ctx, query, values...).Scan(&result.OrderNumber, &result.UserID, &result.ProcessedAt, &result.TransactionType, &result.Sum)
+	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
+	row := r.Con.QueryRow(ctx, sql, args...)
+
+	var result BonusTransaction
+	err = row.Scan(&result.OrderNumber, &result.UserID, &result.ProcessedAt, &result.TransactionType, &result.Sum)
+	if err != nil {
+		if err == pgx.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	return &result, err
+	return &result, nil
 }
 
 func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
-	var values []interface{}
+	queryBuilder := squirrel.Update("bonustransactions")
 
-	query := "UPDATE bonustransactions"
+	queryBuilder = queryBuilder.Where(squirrel.Eq{"order_code": pars.OrderNumber})
 
-	paramNum := 1
+	var values = make(map[string]interface{})
+
 	if !pars.ProcessedAt.IsZero() {
-		query += fmt.Sprintf(" SET processed_at = $%d", paramNum)
-		values = append(values, pars.ProcessedAt)
-		paramNum++
+		values["processed_at"] = pars.ProcessedAt
+		queryBuilder = queryBuilder.Set("processed_at", values["processed_at"])
 	}
 
 	if pars.Sum >= 0 {
-		if len(values) > 0 {
-			query += ","
-		} else {
-			query += " SET"
-		}
-		query += fmt.Sprintf(" SET sum = $%d", paramNum)
-		values = append(values, pars.Sum)
-		paramNum++
+		values["sum"] = pars.Sum
+		queryBuilder = queryBuilder.Set("sum", values["sum"])
 	}
 
 	if len(pars.TransactionType) != 0 {
-		if len(values) > 0 {
-			query += ","
-		} else {
-			query += " SET"
-		}
-		query += fmt.Sprintf(" SET transaction_type = $%d", paramNum)
-		values = append(values, pars.TransactionType)
-		paramNum++
+		values["transaction_type"] = pars.TransactionType
+		queryBuilder = queryBuilder.Set("transaction_type", values["transaction_type"])
 	}
 
 	if len(pars.UserID) != 0 {
-		if len(values) > 0 {
-			query += ","
-		} else {
-			query += " SET"
-		}
-		query += fmt.Sprintf(" SET user_id = $%d", paramNum)
-		values = append(values, pars.UserID)
-		paramNum++
+		values["user_id"] = pars.UserID
+		queryBuilder = queryBuilder.Set("user_id", values["user_id"])
 	}
 
-	query += fmt.Sprintf(" WHERE order_code = '%s'", pars.OrderNumber)
+	sql, args, err := queryBuilder.ToSql()
+	if err != nil {
+		return err
+	}
 
-	_, err := r.Con.Exec(ctx, query, values...)
-
+	_, err = r.Con.Exec(ctx, sql, args...)
 	return err
 }
 
 func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
-	_, err := r.Con.Exec(ctx, "DELETE FROM bonus_transactions WHERE order_code = $1;", pars.OrderNumber)
+	deleteQuery := squirrel.Delete("bonus_transactions").
+		Where(squirrel.Eq{"order_code": pars.OrderNumber})
+
+	query, args, err := deleteQuery.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.Con.Exec(ctx, query, args...)
 	return err
 }
 
 func (r *Repo) Exists(ctx context.Context, orderNumber string) (bool, error) {
-	var exist bool
-	err := r.Con.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM bonus_transactions WHERE order_code = $1);", orderNumber).Scan(&exist)
+	existsQuery := squirrel.Select("EXISTS (SELECT 1 FROM bonus_transactions WHERE order_code = ?)", orderNumber)
+
+	query, args, err := existsQuery.ToSql()
 	if err != nil {
 		return false, err
 	}
 
-	return exist, err
+	var exist bool
+	err = r.Con.QueryRow(ctx, query, args...).Scan(&exist)
+	if err != nil {
+		return false, err
+	}
+
+	return exist, nil
 }
