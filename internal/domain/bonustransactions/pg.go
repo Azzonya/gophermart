@@ -56,7 +56,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, e
 		queryBuilder = queryBuilder.OrderBy(fmt.Sprintf("processed_at %s", pars.OrderBy))
 	}
 
-	sql, args, err := queryBuilder.ToSql()
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (r *Repo) Create(ctx context.Context, obj *BonusTransaction) error {
 		Columns("order_code", "user_id", "transaction_type", "sum").
 		Values(obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
 
-	query, args, err := insert.ToSql()
+	query, args, err := insert.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": values["user_id"]})
 	}
 
-	sql, args, err := queryBuilder.ToSql()
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 		queryBuilder = queryBuilder.Set("user_id", values["user_id"])
 	}
 
-	sql, args, err := queryBuilder.ToSql()
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 	deleteQuery := squirrel.Delete("bonus_transactions").
 		Where(squirrel.Eq{"order_code": pars.OrderNumber})
 
-	query, args, err := deleteQuery.ToSql()
+	query, args, err := deleteQuery.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 func (r *Repo) Exists(ctx context.Context, orderNumber string) (bool, error) {
 	existsQuery := squirrel.Select("EXISTS (SELECT 1 FROM bonus_transactions WHERE order_code = ?)", orderNumber)
 
-	query, args, err := existsQuery.ToSql()
+	query, args, err := existsQuery.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return false, err
 	}

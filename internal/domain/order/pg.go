@@ -56,7 +56,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 		queryBuilder = queryBuilder.OrderBy(fmt.Sprintf("uploaded_at %s", pars.OrderBy))
 	}
 
-	sql, args, err := queryBuilder.ToSql()
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (r *Repo) Create(ctx context.Context, obj *Order) error {
 		Columns("code", "status", "user_id").
 		Values(obj.OrderNumber, obj.Status, obj.UserID)
 
-	query, args, err := insert.ToSql()
+	query, args, err := insert.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (r *Repo) Create(ctx context.Context, obj *Order) error {
 func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, error) {
 	var result Order
 
-	queryBuilder := squirrel.Select("*").From("orders").Where(squirrel.Eq{"true": true})
+	queryBuilder := squirrel.Select("*").From("orders")
 
 	if len(pars.UserID) != 0 {
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": pars.UserID})
@@ -113,7 +113,9 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, error) {
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"status": pars.Status})
 	}
 
-	sql, args, err := queryBuilder.ToSql()
+	queryBuilder = queryBuilder.Limit(1)
+
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +170,7 @@ func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 func (r *Repo) Exists(ctx context.Context, orderNumber string) (bool, error) {
 	existsQuery := squirrel.Select("SELECT EXISTS (SELECT 1 FROM orders WHERE code = $1);", orderNumber)
 
-	query, args, err := existsQuery.ToSql()
+	query, args, err := existsQuery.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return false, err
 	}

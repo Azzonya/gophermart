@@ -36,7 +36,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"balance": *pars.MinBalance})
 	}
 
-	sql, args, err := queryBuilder.ToSql()
+	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
 func (r *Repo) Exists(ctx context.Context, login string) (bool, error) {
 	existsQuery := squirrel.Select("SELECT EXISTS (SELECT 1 FROM users WHERE login = ?);", login)
 
-	query, args, err := existsQuery.ToSql()
+	query, args, err := existsQuery.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return false, err
 	}
