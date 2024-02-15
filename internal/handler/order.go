@@ -18,7 +18,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 	}
 
 	orderNumber := string(body)
-	userID, _ := u.auth.GetUserIDFromCookie(c)
+	userID, _ := u.userUsecase.GetUserIDFromCookieU(c)
 
 	err = u.orderUsecase.Create(c.Request.Context(), &entities.Order{
 		OrderNumber: orderNumber,
@@ -42,7 +42,7 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 
 func (u *UserHandlers) GetOrders(c *gin.Context) {
 	// Реализация получения списка заказов пользователя
-	userID, _ := u.auth.GetUserIDFromCookie(c)
+	userID, _ := u.userUsecase.GetUserIDFromCookieU(c)
 
 	orders, err := u.orderUsecase.ListWithAccrual(c.Request.Context(), &entities.OrderListPars{
 		UserID:  &userID,

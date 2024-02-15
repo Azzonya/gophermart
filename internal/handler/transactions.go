@@ -22,7 +22,7 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 		return
 	}
 
-	req.UserID, _ = u.auth.GetUserIDFromCookie(c)
+	req.UserID, _ = u.userUsecase.GetUserIDFromCookieU(c)
 
 	err = u.bonusTransactionsUsecase.WithdrawBalanceU(ctx, &entities.BonusTransaction{
 		OrderNumber:     req.OrderNumber,
@@ -42,7 +42,7 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 }
 
 func (u *UserHandlers) GetWithdrawals(c *gin.Context) {
-	userID, _ := u.auth.GetUserIDFromCookie(c)
+	userID, _ := u.userUsecase.GetUserIDFromCookieU(c)
 
 	withdrawals, err := u.bonusTransactionsUsecase.List(c.Request.Context(), &entities.BonusTransactionsListPars{
 		UserID:          &userID,

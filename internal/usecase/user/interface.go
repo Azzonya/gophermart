@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 type UserServiceI interface {
@@ -17,4 +19,9 @@ type UserServiceI interface {
 	Update(ctx context.Context, pars *entities.UserParameters) error
 	Delete(ctx context.Context, pars *entities.UserParameters) error
 	Exists(ctx context.Context, orderNumber string) (bool, error)
+}
+
+type AuthServiceI interface {
+	GetUserIDFromCookie(c *gin.Context) (string, error)
+	CreateJWTCookie(u *entities.User) (*http.Cookie, error)
 }

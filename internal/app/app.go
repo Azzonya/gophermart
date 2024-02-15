@@ -75,7 +75,7 @@ func (a *App) Init() {
 		//user
 		userRepoV := userService.NewRepo(a.pgpool)
 		a.userService = userService.New(userRepoV, a.bonusTransactionsService)
-		userUsecaseV := userUsecase.New(a.userService)
+		userUsecaseV := userUsecase.New(a.userService, authorizer)
 
 		//order
 		orderRepoV := orderService.NewRepo(a.pgpool)
@@ -88,7 +88,7 @@ func (a *App) Init() {
 		bonusTransactionsUsecaseV.SetBonusService(a.bonusService)
 
 		//handers
-		a.userHandlers = handler.New(authorizer, userUsecaseV, orderUsecaseV, bonusTransactionsUsecaseV, config.Conf.PgDsn)
+		a.userHandlers = handler.New(userUsecaseV, orderUsecaseV, bonusTransactionsUsecaseV, config.Conf.PgDsn)
 
 		// server
 		a.rest = NewRest(a.userHandlers, config.Conf.JwtSecret)

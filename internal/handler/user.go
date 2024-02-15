@@ -41,7 +41,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	sessionCookie, errS := u.auth.CreateJWTCookie(newUser)
+	sessionCookie, errS := u.userUsecase.CreateJWTCookieU(newUser)
 	if errS != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create JWT cookie", "details": errS.Error()})
 		return
@@ -58,7 +58,7 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 	var err error
 	req := &entities.UserParameters{}
 
-	userID, _ := u.auth.GetUserIDFromCookie(c)
+	userID, _ := u.userUsecase.GetUserIDFromCookieU(c)
 	if len(userID) != 0 {
 		c.JSON(http.StatusOK, nil)
 		return
@@ -79,7 +79,7 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 		return
 	}
 
-	sessionCookie, errS := u.auth.CreateJWTCookie(foundUser)
+	sessionCookie, errS := u.userUsecase.CreateJWTCookieU(foundUser)
 	if errS != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return

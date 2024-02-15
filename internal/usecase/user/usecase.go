@@ -3,15 +3,19 @@ package user
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 type Usecase struct {
-	srv UserServiceI
+	srv     UserServiceI
+	authSrv AuthServiceI
 }
 
-func New(srv UserServiceI) *Usecase {
+func New(srv UserServiceI, authServ AuthServiceI) *Usecase {
 	return &Usecase{
-		srv: srv,
+		srv:     srv,
+		authSrv: authServ,
 	}
 }
 
@@ -41,4 +45,12 @@ func (u *Usecase) CheckAuth(ctx context.Context, pars *entities.UserParameters) 
 
 func (u *Usecase) GetBalanceWithWithdrawn(ctx context.Context, pars *entities.UserParameters) (*entities.UserBalance, error) {
 	return u.srv.GetBalanceWithWithdrawn(ctx, pars)
+}
+
+func (u *Usecase) GetUserIDFromCookieU(ctx *gin.Context) (string, error) {
+	return u.authSrv.GetUserIDFromCookie(ctx)
+}
+
+func (u *Usecase) CreateJWTCookieU(user *entities.User) (*http.Cookie, error) {
+	return u.authSrv.CreateJWTCookie(user)
 }

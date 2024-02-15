@@ -8,7 +8,7 @@ import (
 
 func (u *UserHandlers) GetBalance(c *gin.Context) {
 	// Реализация получения баланса баллов лояльности пользователя
-	userID, _ := u.auth.GetUserIDFromCookie(c)
+	userID, _ := u.userUsecase.GetUserIDFromCookieU(c)
 
 	result, err := u.userUsecase.GetBalanceWithWithdrawn(c.Request.Context(), &entities.UserParameters{
 		ID: userID,
