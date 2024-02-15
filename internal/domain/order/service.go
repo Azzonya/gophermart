@@ -63,7 +63,7 @@ func (s *Service) ListWithAccrual(ctx context.Context, pars *entities.OrderListP
 		orderMap[order.OrderNumber] = *order
 	}
 
-	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &entities.BonusTransactionsListPars{
+	bonusTransactionsList, err := s.bonusTransactionsService.ListBtS(ctx, &entities.BonusTransactionsListPars{
 		UserID:          pars.UserID,
 		TransactionType: entities.Accrual,
 	})
