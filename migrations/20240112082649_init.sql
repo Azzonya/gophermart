@@ -33,3 +33,10 @@ CREATE INDEX idx_bonus_transactions_order_code ON bonus_transactions (order_code
 CREATE INDEX idx_bonus_transactions_user_id ON bonus_transactions (user_id);
 CREATE INDEX idx_bonus_transactions_processed_at ON bonus_transactions (processed_at);
 CREATE INDEX idx_bonus_transactions_transaction_type ON bonus_transactions (transaction_type);
+
+-- +goose Down
+DROP TABLE bonus_transactions CASCADE;
+
+DROP TABLE orders CASCADE;
+
+DROP TABLE users CASCADE;
