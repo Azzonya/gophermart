@@ -6,13 +6,25 @@ import (
 	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http"
 	"github.com/Azzonya/gophermart/internal/entities"
 	"github.com/Azzonya/gophermart/internal/errs"
-	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
-	"github.com/Azzonya/gophermart/internal/usecase/order"
-	"github.com/Azzonya/gophermart/internal/usecase/user"
 	"log/slog"
 	"sync"
 	"time"
 )
+
+type WithdrawalServiceI interface {
+	Get(ctx context.Context, pars *entities.BonusTransactionsParameters) (*entities.BonusTransaction, error)
+	Create(ctx context.Context, obj *entities.BonusTransaction) error
+}
+
+type OrderServiceI interface {
+	List(ctx context.Context, pars *entities.OrderListPars) ([]*entities.Order, error)
+	Update(ctx context.Context, pars *entities.OrderParameters) error
+}
+
+type UserServiceI interface {
+	Get(ctx context.Context, pars *entities.UserParameters) (*entities.User, error)
+	Update(ctx context.Context, pars *entities.UserParameters) error
+}
 
 type ClientAccrualI interface {
 	Send(orderNumber string) (*http_gw.RequestResult, error)
@@ -20,13 +32,13 @@ type ClientAccrualI interface {
 
 type Service struct {
 	accrual                  ClientAccrualI
-	bonusTransactionsService bonustransactions.WithdrawalServiceI
-	orderService             order.OrderServiceI
-	userService              user.UserServiceI
+	bonusTransactionsService WithdrawalServiceI
+	orderService             OrderServiceI
+	userService              UserServiceI
 	wg                       sync.WaitGroup
 }
 
-func New(accrual ClientAccrualI, bonusTransactionsService bonustransactions.WithdrawalServiceI, orderService order.OrderServiceI, user user.UserServiceI) *Service {
+func New(accrual ClientAccrualI, bonusTransactionsService WithdrawalServiceI, orderService OrderServiceI, user UserServiceI) *Service {
 	return &Service{
 		accrual:                  accrual,
 		bonusTransactionsService: bonusTransactionsService,

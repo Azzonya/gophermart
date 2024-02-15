@@ -3,17 +3,20 @@ package order
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/entities"
-	bonusTransactions "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"strconv"
 	"time"
 )
 
-type Service struct {
-	repoDB                   OrderRepoDBI
-	bonusTransactionsService bonusTransactions.WithdrawalServiceI
+type WithdrawalServiceI interface {
+	ListBtS(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error)
 }
 
-func New(repoDB OrderRepoDBI, bonusTransactionsService bonusTransactions.WithdrawalServiceI) *Service {
+type Service struct {
+	repoDB                   OrderRepoDBI
+	bonusTransactionsService WithdrawalServiceI
+}
+
+func New(repoDB OrderRepoDBI, bonusTransactionsService WithdrawalServiceI) *Service {
 	return &Service{
 		repoDB:                   repoDB,
 		bonusTransactionsService: bonusTransactionsService,
