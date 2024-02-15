@@ -22,7 +22,7 @@ func (u *Usecase) SetBonusService(bonus BonusServiceI) {
 }
 
 func (u *Usecase) List(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.WithdrawalsResult, error) {
-	withdrawals, err := u.srv.List(ctx, pars)
+	withdrawals, err := u.srv.ListBtS(ctx, pars)
 	if err != nil {
 		return nil, err
 	}
