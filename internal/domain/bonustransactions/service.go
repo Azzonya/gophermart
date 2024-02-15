@@ -15,7 +15,7 @@ func New(repoDB BonusTransactionsRepoDBI) *Service {
 	}
 }
 
-func (s *Service) List(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error) {
+func (s *Service) ListBtS(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error) {
 	return s.repoDB.ListBt(ctx, pars)
 }
 

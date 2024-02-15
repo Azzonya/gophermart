@@ -6,7 +6,7 @@ import (
 )
 
 type WithdrawalServiceI interface {
-	List(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error)
+	ListBtS(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error)
 	Get(ctx context.Context, pars *entities.BonusTransactionsParameters) (*entities.BonusTransaction, error)
 	Create(ctx context.Context, obj *entities.BonusTransaction) error
 	Update(ctx context.Context, pars *entities.BonusTransactionsParameters) error

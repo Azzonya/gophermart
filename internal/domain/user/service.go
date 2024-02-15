@@ -3,16 +3,19 @@ package user
 import (
 	"context"
 	"github.com/Azzonya/gophermart/internal/entities"
-	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Service struct {
-	repoDB                   repoDBI
-	bonusTransactionsService bonustransactions.WithdrawalServiceI
+type WithdrawalServiceI interface {
+	ListBtS(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error)
 }
 
-func New(repoDB repoDBI, bonusTransactionsService bonustransactions.WithdrawalServiceI) *Service {
+type Service struct {
+	repoDB                   repoDBI
+	bonusTransactionsService WithdrawalServiceI
+}
+
+func New(repoDB repoDBI, bonusTransactionsService WithdrawalServiceI) *Service {
 	return &Service{
 		repoDB:                   repoDB,
 		bonusTransactionsService: bonusTransactionsService,
@@ -67,7 +70,7 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *entities.Us
 		return nil, err
 	}
 
-	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &entities.BonusTransactionsListPars{
+	bonusTransactionsList, err := s.bonusTransactionsService.ListBtS(ctx, &entities.BonusTransactionsListPars{
 		UserID:          &pars.ID,
 		TransactionType: entities.Debit,
 	})
