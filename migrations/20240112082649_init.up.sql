@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TYPE order_status_enum AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED');
 CREATE TYPE transaction_type_enum AS ENUM ('+', '-');
 
