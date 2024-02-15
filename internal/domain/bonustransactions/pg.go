@@ -20,36 +20,29 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 
 func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, error) {
 	queryBuilder := squirrel.Select("*").From("bonus_transactions").Where(squirrel.Eq{"true": true})
-	var values = make(map[string]interface{})
 
 	if pars.ProcessedAfter != nil && !pars.ProcessedAfter.IsZero() {
-		values["processed_at"] = pars.ProcessedAfter
-		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"processed_at": values["processed_at"]})
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"processed_at": pars.ProcessedAfter})
 	}
 
 	if pars.ProcessedBefore != nil && !pars.ProcessedBefore.IsZero() {
-		values["processed_at"] = pars.ProcessedBefore
-		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"processed_at": values["processed_at"]})
+		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"processed_at": pars.ProcessedBefore})
 	}
 
 	if pars.TransactionType != "" {
-		values["transaction_type"] = pars.TransactionType
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"transaction_type": values["transaction_type"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"transaction_type": pars.TransactionType})
 	}
 
 	if pars.MaxSum != nil {
-		values["sum"] = *pars.MaxSum
-		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"sum": values["sum"]})
+		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"sum": pars.MaxSum})
 	}
 
 	if pars.MinSum != nil {
-		values["sum"] = *pars.MinSum
-		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"sum": values["sum"]})
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"sum": pars.MinSum})
 	}
 
 	if pars.UserID != nil {
-		values["user_id"] = *pars.UserID
-		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"user_id": values["user_id"]})
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"user_id": pars.UserID})
 	}
 
 	if len(pars.OrderBy) != 0 {
@@ -99,31 +92,24 @@ func (r *Repo) Create(ctx context.Context, obj *BonusTransaction) error {
 func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error) {
 	queryBuilder := squirrel.Select("*").From("bonus_transactions").Where(squirrel.Eq{"true": true})
 
-	var values = make(map[string]interface{})
-
 	if len(pars.OrderNumber) != 0 {
-		values["order_code"] = pars.OrderNumber
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"order_code": values["order_code"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"order_code": pars.OrderNumber})
 	}
 
 	if !pars.ProcessedAt.IsZero() {
-		values["processed_at"] = pars.ProcessedAt
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"processed_at": values["processed_at"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"processed_at": pars.ProcessedAt})
 	}
 
 	if pars.Sum != 0 {
-		values["sum"] = pars.Sum
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"sum": values["sum"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"sum": pars.Sum})
 	}
 
 	if len(pars.TransactionType) != 0 {
-		values["transaction_type"] = pars.TransactionType
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"transaction_type": values["transaction_type"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"transaction_type": pars.TransactionType})
 	}
 
 	if len(pars.UserID) != 0 {
-		values["user_id"] = pars.UserID
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": values["user_id"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": pars.UserID})
 	}
 
 	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
@@ -150,26 +136,20 @@ func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 
 	queryBuilder = queryBuilder.Where(squirrel.Eq{"order_code": pars.OrderNumber})
 
-	var values = make(map[string]interface{})
-
 	if !pars.ProcessedAt.IsZero() {
-		values["processed_at"] = pars.ProcessedAt
-		queryBuilder = queryBuilder.Set("processed_at", values["processed_at"])
+		queryBuilder = queryBuilder.Set("processed_at", pars.ProcessedAt)
 	}
 
 	if pars.Sum >= 0 {
-		values["sum"] = pars.Sum
-		queryBuilder = queryBuilder.Set("sum", values["sum"])
+		queryBuilder = queryBuilder.Set("sum", pars.Sum)
 	}
 
 	if len(pars.TransactionType) != 0 {
-		values["transaction_type"] = pars.TransactionType
-		queryBuilder = queryBuilder.Set("transaction_type", values["transaction_type"])
+		queryBuilder = queryBuilder.Set("transaction_type", pars.TransactionType)
 	}
 
 	if len(pars.UserID) != 0 {
-		values["user_id"] = pars.UserID
-		queryBuilder = queryBuilder.Set("user_id", values["user_id"])
+		queryBuilder = queryBuilder.Set("user_id", pars.UserID)
 	}
 
 	sql, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()

@@ -22,11 +22,8 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 	queryBuilder := squirrel.Select("code", "uploaded_at", "status", "user_id").From("orders").Where(squirrel.Eq{"true": true})
 
-	var values = make(map[string]interface{})
-
 	if pars.UserID != nil {
-		values["user_id"] = *pars.UserID
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": values["user_id"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": pars.UserID})
 	}
 
 	if pars.OrderNumber != nil {
@@ -34,18 +31,15 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 	}
 
 	if pars.UploadedBefore != nil {
-		values["uploaded_at"] = *pars.UploadedBefore
-		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"uploaded_at": values["uploaded_at"]})
+		queryBuilder = queryBuilder.Where(squirrel.LtOrEq{"uploaded_at": pars.UploadedBefore})
 	}
 
 	if pars.UploadedAfter != nil {
-		values["uploaded_at"] = *pars.UploadedAfter
-		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"uploaded_at": values["uploaded_at"]})
+		queryBuilder = queryBuilder.Where(squirrel.GtOrEq{"uploaded_at": pars.UploadedAfter})
 	}
 
 	if pars.Status != nil {
-		values["status"] = *pars.Status
-		queryBuilder = queryBuilder.Where(squirrel.Eq{"status": values["status"]})
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"status": pars.Status})
 	}
 
 	if pars.Statuses != nil && len(pars.Statuses) > 0 {

@@ -11,7 +11,6 @@ import (
 	orderService "github.com/Azzonya/gophermart/internal/domain/order"
 	userService "github.com/Azzonya/gophermart/internal/domain/user"
 	"github.com/Azzonya/gophermart/internal/handler"
-	"github.com/Azzonya/gophermart/internal/storage"
 	bonusTransactionsUsecase "github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	orderUsecase "github.com/Azzonya/gophermart/internal/usecase/order"
 	userUsecase "github.com/Azzonya/gophermart/internal/usecase/user"
@@ -54,7 +53,8 @@ func (a *App) Init() {
 
 	// pgpool
 	{
-		a.pgpool, err = storage.NewPgPool(config.Conf.PgDsn)
+		a.pgpool, err = pgxpool.New(context.Background(), config.Conf.PgDsn)
+		//a.pgpool, err = storage.NewPgPool(config.Conf.PgDsn)
 		errCheck(err, "pgxpool.New")
 	}
 
