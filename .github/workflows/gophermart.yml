@@ -55,7 +55,7 @@ jobs:
 
       - name: Migrate database
         run: |
-          goose -dir=db/migrations mysql "postgresql://postgres:postgres@postgres/praktikum?sslmode=disable" up
+          goose -dir=db/migrations postgres "postgresql://postgres:postgres@postgres:5432/praktikum?sslmode=disable" up
 
       - name: Test
         run: |
