@@ -3,10 +3,20 @@ package bonustransactions
 import (
 	"context"
 	"fmt"
+	"github.com/Azzonya/gophermart/internal/entities"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type BonusTransactionsRepoDBI interface {
+	ListBt(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error)
+	Create(ctx context.Context, obj *entities.BonusTransaction) error
+	Get(ctx context.Context, pars *entities.BonusTransactionsParameters) (*entities.BonusTransaction, error)
+	Update(ctx context.Context, pars *entities.BonusTransactionsParameters) error
+	Delete(ctx context.Context, pars *entities.BonusTransactionsParameters) error
+	Exists(ctx context.Context, login string) (bool, error)
+}
 
 type Repo struct {
 	Con *pgxpool.Pool
@@ -18,7 +28,7 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, error) {
+func (r *Repo) ListBt(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.BonusTransaction, error) {
 	queryBuilder := squirrel.Select("*").From("bonus_transactions").Where(squirrel.Eq{"true": true})
 
 	if pars.ProcessedAfter != nil && !pars.ProcessedAfter.IsZero() {
@@ -61,9 +71,9 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, e
 
 	defer rows.Close()
 
-	var result []*BonusTransaction
+	var result []*entities.BonusTransaction
 	for rows.Next() {
-		bonusTransaction := BonusTransaction{}
+		bonusTransaction := entities.BonusTransaction{}
 		err = rows.Scan(&bonusTransaction.OrderNumber, &bonusTransaction.UserID, &bonusTransaction.ProcessedAt, &bonusTransaction.TransactionType, &bonusTransaction.Sum)
 		if err != nil {
 			return nil, err
@@ -75,7 +85,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, e
 	return result, nil
 }
 
-func (r *Repo) Create(ctx context.Context, obj *BonusTransaction) error {
+func (r *Repo) Create(ctx context.Context, obj *entities.BonusTransaction) error {
 	insert := squirrel.Insert("bonus_transactions").
 		Columns("order_code", "user_id", "transaction_type", "sum").
 		Values(obj.OrderNumber, obj.UserID, obj.TransactionType, obj.Sum)
@@ -89,7 +99,7 @@ func (r *Repo) Create(ctx context.Context, obj *BonusTransaction) error {
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error) {
+func (r *Repo) Get(ctx context.Context, pars *entities.BonusTransactionsParameters) (*entities.BonusTransaction, error) {
 	queryBuilder := squirrel.Select("*").From("bonus_transactions").Where(squirrel.Eq{"true": true})
 
 	if len(pars.OrderNumber) != 0 {
@@ -119,7 +129,7 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error
 
 	row := r.Con.QueryRow(ctx, sql, args...)
 
-	var result BonusTransaction
+	var result entities.BonusTransaction
 	err = row.Scan(&result.OrderNumber, &result.UserID, &result.ProcessedAt, &result.TransactionType, &result.Sum)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -131,7 +141,7 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error
 	return &result, nil
 }
 
-func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *entities.BonusTransactionsParameters) error {
 	queryBuilder := squirrel.Update("bonustransactions")
 
 	queryBuilder = queryBuilder.Where(squirrel.Eq{"order_code": pars.OrderNumber})
@@ -161,7 +171,7 @@ func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *entities.BonusTransactionsParameters) error {
 	deleteQuery := squirrel.Delete("bonus_transactions").
 		Where(squirrel.Eq{"order_code": pars.OrderNumber})
 

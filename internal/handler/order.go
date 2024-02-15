@@ -2,8 +2,8 @@ package handler
 
 import (
 	"errors"
-	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
-	"github.com/Azzonya/gophermart/internal/storage"
+	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -20,18 +20,18 @@ func (u *UserHandlers) UploadOrder(c *gin.Context) {
 	orderNumber := string(body)
 	userID, _ := u.auth.GetUserIDFromCookie(c)
 
-	err = u.orderUsecase.Create(c.Request.Context(), &orderModel.Order{
+	err = u.orderUsecase.Create(c.Request.Context(), &entities.Order{
 		OrderNumber: orderNumber,
-		Status:      orderModel.OrderStatusNew,
+		Status:      entities.OrderStatusNew,
 		UserID:      userID,
 	})
 
 	switch {
-	case errors.As(err, &storage.ErrOrderNumberLuhnValid{}):
+	case errors.As(err, &errs.ErrOrderNumberLuhnValid{}):
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Неверный формат номера заказа (алгоритм Луна)"})
-	case errors.As(err, &storage.ErrOrderUploaded{}):
+	case errors.As(err, &errs.ErrOrderUploaded{}):
 		c.JSON(http.StatusOK, gin.H{"message": "already uploaded"})
-	case errors.As(err, &storage.ErrOrderUploadedByAnotherUser{}):
+	case errors.As(err, &errs.ErrOrderUploadedByAnotherUser{}):
 		c.JSON(http.StatusConflict, gin.H{"message": "already uploaded by different user"})
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create order", "error": err.Error()})
@@ -44,7 +44,7 @@ func (u *UserHandlers) GetOrders(c *gin.Context) {
 	// Реализация получения списка заказов пользователя
 	userID, _ := u.auth.GetUserIDFromCookie(c)
 
-	orders, err := u.orderUsecase.ListWithAccrual(c.Request.Context(), &orderModel.ListPars{
+	orders, err := u.orderUsecase.ListWithAccrual(c.Request.Context(), &entities.OrderListPars{
 		UserID:  &userID,
 		OrderBy: "ASC",
 	})

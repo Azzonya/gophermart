@@ -3,13 +3,23 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/Azzonya/gophermart/internal/storage"
+	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type repoDBI interface {
+	ListUsers(ctx context.Context, pars *entities.UserListPars) ([]*entities.User, error)
+	Create(ctx context.Context, obj *entities.User) error
+	Get(ctx context.Context, pars *entities.UserParameters) (*entities.User, error)
+	Update(ctx context.Context, pars *entities.UserParameters) error
+	Delete(ctx context.Context, pars *entities.UserParameters) error
+	Exists(ctx context.Context, login string) (bool, error)
+}
 
 type Repo struct {
 	Con *pgxpool.Pool
@@ -21,7 +31,7 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
+func (r *Repo) ListUsers(ctx context.Context, pars *entities.UserListPars) ([]*entities.User, error) {
 	queryBuilder := squirrel.Select("*").From("users").Where(squirrel.Eq{"true": true})
 
 	if pars.Login != nil {
@@ -47,10 +57,10 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 	}
 	defer rows.Close()
 
-	var result []*User
+	var result []*entities.User
 
 	for rows.Next() {
-		var userFound User
+		var userFound entities.User
 		err = rows.Scan(&userFound.ID, &userFound.Login, &userFound.Password, &userFound.Balance)
 		if err != nil {
 			return nil, err
@@ -65,7 +75,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*User, error) {
 	return result, nil
 }
 
-func (r *Repo) Create(ctx context.Context, obj *User) error {
+func (r *Repo) Create(ctx context.Context, obj *entities.User) error {
 	queryBuilder := squirrel.Insert("users").
 		Columns("login", "password").
 		Values(obj.Login, obj.Password)
@@ -78,7 +88,7 @@ func (r *Repo) Create(ctx context.Context, obj *User) error {
 	_, err = r.Con.Exec(ctx, sql, args...)
 	if err != nil {
 		if pgerr, ok := err.(*pgconn.PgError); ok && pgerr.Code == pgerrcode.UniqueViolation {
-			return storage.ErrUserNotUniq{Login: obj.Login}
+			return errs.ErrUserNotUniq{Login: obj.Login}
 		}
 		return err
 	}
@@ -86,7 +96,7 @@ func (r *Repo) Create(ctx context.Context, obj *User) error {
 	return nil
 }
 
-func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, error) {
+func (r *Repo) Get(ctx context.Context, pars *entities.UserParameters) (*entities.User, error) {
 	queryBuilder := squirrel.Select("*").From("users").Where(squirrel.Expr("true"))
 
 	if len(pars.ID) != 0 {
@@ -107,7 +117,7 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, error) {
 		return nil, err
 	}
 
-	var result User
+	var result entities.User
 	err = r.Con.QueryRow(ctx, sql, args...).Scan(&result.ID, &result.Login, &result.Password, &result.Balance)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -119,7 +129,7 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*User, error) {
 	return &result, nil
 }
 
-func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *entities.UserParameters) error {
 	queryBuilder := squirrel.Update("users")
 
 	if len(pars.Login) != 0 {
@@ -143,7 +153,7 @@ func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *entities.UserParameters) error {
 	queryBuilder := squirrel.Delete("users")
 
 	queryBuilder = queryBuilder.Where(squirrel.Eq{"login": pars.Login})

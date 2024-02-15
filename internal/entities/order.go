@@ -1,7 +1,6 @@
-package order
+package entities
 
 import (
-	"context"
 	"time"
 )
 
@@ -10,15 +9,6 @@ type Order struct {
 	UploadedAt  time.Time
 	Status      OrderStatus
 	UserID      string
-}
-
-type RepoDBI interface {
-	List(ctx context.Context, pars *ListPars) ([]*Order, error)
-	Create(ctx context.Context, obj *Order) error
-	Get(ctx context.Context, pars *GetPars) (*Order, error)
-	Update(ctx context.Context, pars *GetPars) error
-	Delete(ctx context.Context, pars *GetPars) error
-	Exists(ctx context.Context, orderNumber string) (bool, error)
 }
 
 type OrderWithAccrual struct {
@@ -37,14 +27,14 @@ const (
 	//OrderStatusProcessed  OrderStatus = "PROCESSED"
 )
 
-type GetPars struct {
+type OrderParameters struct {
 	OrderNumber string
 	UploadedAt  time.Time
 	Status      OrderStatus
 	UserID      string
 }
 
-type ListPars struct {
+type OrderListPars struct {
 	OrderNumber    *string
 	UploadedBefore *time.Time
 	UploadedAfter  *time.Time

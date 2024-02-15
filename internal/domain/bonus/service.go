@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	http_gw "github.com/Azzonya/gophermart/internal/client/accrual/http"
-	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
-	orderModel "github.com/Azzonya/gophermart/internal/domain/order"
-	userModel "github.com/Azzonya/gophermart/internal/domain/user"
-	"github.com/Azzonya/gophermart/internal/storage"
+	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"github.com/Azzonya/gophermart/internal/usecase/order"
 	"github.com/Azzonya/gophermart/internal/usecase/user"
@@ -62,11 +60,11 @@ func (s *Service) Wait() {
 func (s *Service) updateAccrualInfo(ctx context.Context) {
 	defer s.wg.Done()
 
-	statuses := []orderModel.OrderStatus{
-		orderModel.OrderStatusNew,
-		orderModel.OrderStatusProcessing,
+	statuses := []entities.OrderStatus{
+		entities.OrderStatusNew,
+		entities.OrderStatusProcessing,
 	}
-	orders, err := s.orderService.List(ctx, &orderModel.ListPars{
+	orders, err := s.orderService.List(ctx, &entities.OrderListPars{
 		Statuses: statuses,
 	})
 	if err != nil {
@@ -87,8 +85,8 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 		}
 
 		if string(v.Status) != responseResult.Status {
-			err = s.orderService.Update(ctx, &orderModel.GetPars{
-				Status:      orderModel.OrderStatus(responseResult.Status),
+			err = s.orderService.Update(ctx, &entities.OrderParameters{
+				Status:      entities.OrderStatus(responseResult.Status),
 				OrderNumber: v.OrderNumber,
 			})
 			if err != nil {
@@ -97,9 +95,9 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			}
 		}
 
-		bonusTransaction, err := s.bonusTransactionsService.Get(ctx, &bonusTransactionsModel.GetPars{
+		bonusTransaction, err := s.bonusTransactionsService.Get(ctx, &entities.BonusTransactionsParameters{
 			OrderNumber:     v.OrderNumber,
-			TransactionType: bonusTransactionsModel.Accrual,
+			TransactionType: entities.Accrual,
 		})
 		if err != nil {
 			slog.Error(fmt.Sprintf("failed to check bonus transaction existence for order %s: %s", v.OrderNumber, err.Error()))
@@ -110,10 +108,10 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			return
 		}
 
-		err = s.bonusTransactionsService.Create(ctx, &bonusTransactionsModel.BonusTransaction{
+		err = s.bonusTransactionsService.Create(ctx, &entities.BonusTransaction{
 			OrderNumber:     v.OrderNumber,
 			UserID:          v.UserID,
-			TransactionType: bonusTransactionsModel.Accrual,
+			TransactionType: entities.Accrual,
 			Sum:             responseResult.Accrual,
 		})
 		if err != nil {
@@ -121,7 +119,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			return
 		}
 
-		foundUser, err := s.userService.Get(ctx, &userModel.GetPars{
+		foundUser, err := s.userService.Get(ctx, &entities.UserParameters{
 			ID: v.UserID,
 		})
 		if err != nil {
@@ -129,7 +127,7 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 			return
 		}
 
-		err = s.userService.Update(ctx, &userModel.GetPars{
+		err = s.userService.Update(ctx, &entities.UserParameters{
 			ID:      v.UserID,
 			Balance: foundUser.Balance + responseResult.Accrual,
 		})
@@ -140,8 +138,8 @@ func (s *Service) updateAccrualInfo(ctx context.Context) {
 	}
 }
 
-func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsModel.BonusTransaction) error {
-	foundUser, err := s.userService.Get(ctx, &userModel.GetPars{
+func (s *Service) WithdrawBalance(ctx context.Context, pars *entities.BonusTransaction) error {
+	foundUser, err := s.userService.Get(ctx, &entities.UserParameters{
 		ID: pars.UserID,
 	})
 	if err != nil {
@@ -149,7 +147,7 @@ func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsMo
 	}
 
 	if foundUser.Balance < pars.Sum {
-		return storage.ErrUserInsufficientBalance{}
+		return errs.ErrUserInsufficientBalance{}
 	}
 
 	err = s.bonusTransactionsService.Create(ctx, pars)
@@ -157,7 +155,7 @@ func (s *Service) WithdrawBalance(ctx context.Context, pars *bonusTransactionsMo
 		return err
 	}
 
-	err = s.userService.Update(ctx, &userModel.GetPars{
+	err = s.userService.Update(ctx, &entities.UserParameters{
 		ID:      foundUser.ID,
 		Balance: foundUser.Balance - pars.Sum,
 	})

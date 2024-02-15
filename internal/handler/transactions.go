@@ -2,8 +2,8 @@ package handler
 
 import (
 	"errors"
-	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
-	"github.com/Azzonya/gophermart/internal/storage"
+	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -24,15 +24,15 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 
 	req.UserID, _ = u.auth.GetUserIDFromCookie(c)
 
-	err = u.bonusTransactionsUsecase.WithdrawBalance(ctx, &bonusTransactionsModel.BonusTransaction{
+	err = u.bonusTransactionsUsecase.WithdrawBalanceU(ctx, &entities.BonusTransaction{
 		OrderNumber:     req.OrderNumber,
 		UserID:          req.UserID,
-		TransactionType: bonusTransactionsModel.Debit,
+		TransactionType: entities.Debit,
 		Sum:             req.Sum,
 	})
 
 	switch {
-	case errors.As(err, &storage.ErrUserInsufficientBalance{}):
+	case errors.As(err, &errs.ErrUserInsufficientBalance{}):
 		c.JSON(http.StatusPaymentRequired, gin.H{"error": err.Error()})
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to withdraw balance", "error": err.Error()})
@@ -44,9 +44,9 @@ func (u *UserHandlers) WithdrawBalance(c *gin.Context) {
 func (u *UserHandlers) GetWithdrawals(c *gin.Context) {
 	userID, _ := u.auth.GetUserIDFromCookie(c)
 
-	withdrawals, err := u.bonusTransactionsUsecase.List(c.Request.Context(), &bonusTransactionsModel.ListPars{
+	withdrawals, err := u.bonusTransactionsUsecase.List(c.Request.Context(), &entities.BonusTransactionsListPars{
 		UserID:          &userID,
-		TransactionType: bonusTransactionsModel.Debit,
+		TransactionType: entities.Debit,
 		OrderBy:         "ASC",
 	})
 	if err != nil {

@@ -54,7 +54,7 @@ func (a *App) Init() {
 	// pgpool
 	{
 		a.pgpool, err = pgxpool.New(context.Background(), config.Conf.PgDsn)
-		//a.pgpool, err = storage.NewPgPool(config.Conf.PgDsn)
+		//a.pgpool, err = errs.NewPgPool(config.Conf.PgDsn)
 		errCheck(err, "pgxpool.New")
 	}
 

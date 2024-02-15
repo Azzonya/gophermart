@@ -2,8 +2,8 @@ package handler
 
 import (
 	"errors"
-	userModel "github.com/Azzonya/gophermart/internal/domain/user"
-	"github.com/Azzonya/gophermart/internal/storage"
+	"github.com/Azzonya/gophermart/internal/entities"
+	"github.com/Azzonya/gophermart/internal/errs"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -17,7 +17,7 @@ type Jsn struct {
 func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	var err error
 
-	req := &userModel.User{}
+	req := &entities.User{}
 
 	ctx := c.Request.Context()
 
@@ -33,7 +33,7 @@ func (u *UserHandlers) RegisterUser(c *gin.Context) {
 	newUser, err := u.userUsecase.Register(ctx, req)
 	if err != nil {
 		switch {
-		case errors.Is(err, storage.ErrUserNotUniq{}):
+		case errors.Is(err, errs.ErrUserNotUniq{}):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "details": err.Error()})
@@ -56,7 +56,7 @@ func (u *UserHandlers) LoginUser(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 
 	var err error
-	req := &userModel.GetPars{}
+	req := &entities.UserParameters{}
 
 	userID, _ := u.auth.GetUserIDFromCookie(c)
 	if len(userID) != 0 {

@@ -2,7 +2,7 @@ package bonustransactions
 
 import (
 	"context"
-	"github.com/Azzonya/gophermart/internal/domain/bonustransactions"
+	"github.com/Azzonya/gophermart/internal/entities"
 	"time"
 )
 
@@ -21,15 +21,15 @@ func (u *Usecase) SetBonusService(bonus BonusServiceI) {
 	u.bonus = bonus
 }
 
-func (u *Usecase) List(ctx context.Context, pars *bonustransactions.ListPars) ([]*bonustransactions.WithdrawalsResult, error) {
+func (u *Usecase) List(ctx context.Context, pars *entities.BonusTransactionsListPars) ([]*entities.WithdrawalsResult, error) {
 	withdrawals, err := u.srv.List(ctx, pars)
 	if err != nil {
 		return nil, err
 	}
 
-	result := []*bonustransactions.WithdrawalsResult{}
+	result := []*entities.WithdrawalsResult{}
 	for _, v := range withdrawals {
-		withdrawal := bonustransactions.WithdrawalsResult{
+		withdrawal := entities.WithdrawalsResult{
 			OrderNumber: v.OrderNumber,
 			Sum:         v.Sum,
 			ProcessedAt: v.ProcessedAt.Format(time.RFC3339),
@@ -41,19 +41,19 @@ func (u *Usecase) List(ctx context.Context, pars *bonustransactions.ListPars) ([
 	return result, nil
 }
 
-func (u *Usecase) Create(ctx context.Context, obj *bonustransactions.BonusTransaction) error {
+func (u *Usecase) Create(ctx context.Context, obj *entities.BonusTransaction) error {
 	return u.srv.Create(ctx, obj)
 }
 
-func (u *Usecase) Get(ctx context.Context, pars *bonustransactions.GetPars) (*bonustransactions.BonusTransaction, error) {
+func (u *Usecase) Get(ctx context.Context, pars *entities.BonusTransactionsParameters) (*entities.BonusTransaction, error) {
 	return u.srv.Get(ctx, pars)
 }
 
-func (u *Usecase) Update(ctx context.Context, pars *bonustransactions.GetPars) error {
+func (u *Usecase) Update(ctx context.Context, pars *entities.BonusTransactionsParameters) error {
 	return u.srv.Update(ctx, pars)
 }
 
-func (u *Usecase) Delete(ctx context.Context, pars *bonustransactions.GetPars) error {
+func (u *Usecase) Delete(ctx context.Context, pars *entities.BonusTransactionsParameters) error {
 	return u.srv.Delete(ctx, pars)
 }
 
@@ -61,6 +61,6 @@ func (u *Usecase) Exists(ctx context.Context, orderNumber string) (bool, error) 
 	return u.srv.Exists(ctx, orderNumber)
 }
 
-func (u *Usecase) WithdrawBalance(ctx context.Context, pars *bonustransactions.BonusTransaction) error {
+func (u *Usecase) WithdrawBalanceU(ctx context.Context, pars *entities.BonusTransaction) error {
 	return u.bonus.WithdrawBalance(ctx, pars)
 }

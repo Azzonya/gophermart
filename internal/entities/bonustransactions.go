@@ -1,18 +1,8 @@
-package bonustransactions
+package entities
 
 import (
-	"context"
 	"time"
 )
-
-type RepoDBIntreface interface {
-	List(ctx context.Context, pars *ListPars) ([]*BonusTransaction, error)
-	Create(ctx context.Context, obj *BonusTransaction) error
-	Get(ctx context.Context, pars *GetPars) (*BonusTransaction, error)
-	Update(ctx context.Context, pars *GetPars) error
-	Delete(ctx context.Context, pars *GetPars) error
-	Exists(ctx context.Context, login string) (bool, error)
-}
 
 type BonusTransaction struct {
 	OrderNumber     string
@@ -35,7 +25,7 @@ const (
 	Debit   TransactionType = "-"
 )
 
-type GetPars struct {
+type BonusTransactionsParameters struct {
 	OrderNumber     string
 	UserID          string
 	ProcessedAt     time.Time
@@ -43,7 +33,7 @@ type GetPars struct {
 	Sum             float32
 }
 
-type ListPars struct {
+type BonusTransactionsListPars struct {
 	OrderNumber     *string
 	UserID          *string
 	ProcessedBefore *time.Time

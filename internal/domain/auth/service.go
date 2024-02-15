@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
-	userModel "github.com/Azzonya/gophermart/internal/domain/user"
+	"github.com/Azzonya/gophermart/internal/entities"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"net/http"
@@ -87,7 +87,7 @@ func (a *Auth) GetUserIDFromJWT(signedToken string) (string, error) {
 	}
 }
 
-func (a *Auth) CreateJWTCookie(u *userModel.User) (*http.Cookie, error) {
+func (a *Auth) CreateJWTCookie(u *entities.User) (*http.Cookie, error) {
 	token, err := a.NewToken(u)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create auth token: %w", err)
@@ -98,7 +98,7 @@ func (a *Auth) CreateJWTCookie(u *userModel.User) (*http.Cookie, error) {
 	}, nil
 }
 
-func (a *Auth) NewToken(u *userModel.User) (string, error) {
+func (a *Auth) NewToken(u *entities.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(defaultJWTCookieExpiration)),

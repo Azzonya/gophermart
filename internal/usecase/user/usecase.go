@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"github.com/Azzonya/gophermart/internal/domain/user"
+	"github.com/Azzonya/gophermart/internal/entities"
 )
 
 type Usecase struct {
@@ -15,11 +15,7 @@ func New(srv UserServiceI) *Usecase {
 	}
 }
 
-func (u *Usecase) IsLoginTaken(ctx context.Context, login string) (bool, error) {
-	return u.srv.IsLoginTaken(ctx, login)
-}
-
-func (u *Usecase) Register(ctx context.Context, user *user.User) (*user.User, error) {
+func (u *Usecase) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
 	return u.srv.Register(ctx, user)
 }
 
@@ -27,14 +23,10 @@ func (u *Usecase) IsValidPassword(password string, plainPassword string) bool {
 	return u.srv.IsValidPassword(password, plainPassword)
 }
 
-func (u *Usecase) HashPassword(password string) (string, error) {
-	return u.srv.HashPassword(password)
-}
-
-func (u *Usecase) CheckAuth(ctx context.Context, pars *user.GetPars) (*user.User, bool, error) {
+func (u *Usecase) CheckAuth(ctx context.Context, pars *entities.UserParameters) (*entities.User, bool, error) {
 	var result bool
 
-	userFound, err := u.srv.Get(ctx, &user.GetPars{
+	userFound, err := u.srv.Get(ctx, &entities.UserParameters{
 		Login: pars.Login,
 	})
 	if err != nil {
@@ -47,30 +39,6 @@ func (u *Usecase) CheckAuth(ctx context.Context, pars *user.GetPars) (*user.User
 	return userFound, result, err
 }
 
-func (u *Usecase) GetBalanceWithWithdrawn(ctx context.Context, pars *user.GetPars) (*user.UserBalance, error) {
+func (u *Usecase) GetBalanceWithWithdrawn(ctx context.Context, pars *entities.UserParameters) (*entities.UserBalance, error) {
 	return u.srv.GetBalanceWithWithdrawn(ctx, pars)
-}
-
-func (u *Usecase) List(ctx context.Context, pars *user.ListPars) ([]*user.User, error) {
-	return u.srv.List(ctx, pars)
-}
-
-func (u *Usecase) Create(ctx context.Context, obj *user.User) error {
-	return u.srv.Create(ctx, obj)
-}
-
-func (u *Usecase) Get(ctx context.Context, pars *user.GetPars) (*user.User, error) {
-	return u.srv.Get(ctx, pars)
-}
-
-func (u *Usecase) Update(ctx context.Context, pars *user.GetPars) error {
-	return u.srv.Update(ctx, pars)
-}
-
-func (u *Usecase) Delete(ctx context.Context, pars *user.GetPars) error {
-	return u.srv.Delete(ctx, pars)
-}
-
-func (u *Usecase) Exists(ctx context.Context, orderNumber string) (bool, error) {
-	return u.srv.Exists(ctx, orderNumber)
 }

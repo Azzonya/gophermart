@@ -1,7 +1,7 @@
 package handler
 
 import (
-	userModel "github.com/Azzonya/gophermart/internal/domain/user"
+	"github.com/Azzonya/gophermart/internal/entities"
 )
 
 type RegisterRequest struct {
@@ -9,8 +9,8 @@ type RegisterRequest struct {
 	Password string `json:"password"`
 }
 
-func (r *RegisterRequest) Decode() *userModel.User {
-	return &userModel.User{Login: r.Login, Password: r.Password}
+func (r *RegisterRequest) Decode() *entities.User {
+	return &entities.User{Login: r.Login, Password: r.Password}
 }
 
 type UserBalanceResult struct {

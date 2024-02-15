@@ -4,10 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Azzonya/gophermart/internal/entities"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type OrderRepoDBI interface {
+	ListOrders(ctx context.Context, pars *entities.OrderListPars) ([]*entities.Order, error)
+	Create(ctx context.Context, obj *entities.Order) error
+	Get(ctx context.Context, pars *entities.OrderParameters) (*entities.Order, error)
+	Update(ctx context.Context, pars *entities.OrderParameters) error
+	Delete(ctx context.Context, pars *entities.OrderParameters) error
+	Exists(ctx context.Context, orderNumber string) (bool, error)
+}
 
 type Repo struct {
 	Con *pgxpool.Pool
@@ -19,7 +29,7 @@ func NewRepo(con *pgxpool.Pool) *Repo {
 	}
 }
 
-func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
+func (r *Repo) ListOrders(ctx context.Context, pars *entities.OrderListPars) ([]*entities.Order, error) {
 	queryBuilder := squirrel.Select("code", "uploaded_at", "status", "user_id").From("orders").Where(squirrel.Eq{"true": true})
 
 	if pars.UserID != nil {
@@ -62,9 +72,9 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 
 	defer rows.Close()
 
-	var result []*Order
+	var result []*entities.Order
 	for rows.Next() {
-		var orderFound Order
+		var orderFound entities.Order
 		err = rows.Scan(&orderFound.OrderNumber, &orderFound.UploadedAt, &orderFound.Status, &orderFound.UserID)
 		if err != nil {
 			return nil, err
@@ -76,7 +86,7 @@ func (r *Repo) List(ctx context.Context, pars *ListPars) ([]*Order, error) {
 	return result, nil
 }
 
-func (r *Repo) Create(ctx context.Context, obj *Order) error {
+func (r *Repo) Create(ctx context.Context, obj *entities.Order) error {
 	insert := squirrel.Insert("orders").
 		Columns("code", "status", "user_id").
 		Values(obj.OrderNumber, obj.Status, obj.UserID)
@@ -90,8 +100,8 @@ func (r *Repo) Create(ctx context.Context, obj *Order) error {
 	return err
 }
 
-func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, error) {
-	var result Order
+func (r *Repo) Get(ctx context.Context, pars *entities.OrderParameters) (*entities.Order, error) {
+	var result entities.Order
 
 	queryBuilder := squirrel.Select("*").From("orders")
 
@@ -125,7 +135,7 @@ func (r *Repo) Get(ctx context.Context, pars *GetPars) (*Order, error) {
 	return &result, nil
 }
 
-func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
+func (r *Repo) Update(ctx context.Context, pars *entities.OrderParameters) error {
 	queryBuilder := squirrel.Update("orders")
 
 	if len(pars.UserID) != 0 {
@@ -147,7 +157,7 @@ func (r *Repo) Update(ctx context.Context, pars *GetPars) error {
 	return err
 }
 
-func (r *Repo) Delete(ctx context.Context, pars *GetPars) error {
+func (r *Repo) Delete(ctx context.Context, pars *entities.OrderParameters) error {
 	queryBuilder := squirrel.Delete("orders")
 
 	queryBuilder = queryBuilder.Where(squirrel.Eq{"code": pars.OrderNumber})

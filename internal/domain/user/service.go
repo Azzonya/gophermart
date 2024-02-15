@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	bonusTransactionsModel "github.com/Azzonya/gophermart/internal/domain/bonustransactions"
+	"github.com/Azzonya/gophermart/internal/entities"
 	"github.com/Azzonya/gophermart/internal/usecase/bonustransactions"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,7 +39,7 @@ func (s *Service) IsLoginTaken(ctx context.Context, login string) (bool, error) 
 	return s.repoDB.Exists(ctx, login)
 }
 
-func (s *Service) Register(ctx context.Context, user *User) (*User, error) {
+func (s *Service) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
 	var err error
 	user.Password, err = s.HashPassword(user.Password)
 	if err != nil {
@@ -51,7 +51,7 @@ func (s *Service) Register(ctx context.Context, user *User) (*User, error) {
 		return nil, err
 	}
 
-	u, err := s.repoDB.Get(ctx, &GetPars{
+	u, err := s.repoDB.Get(ctx, &entities.UserParameters{
 		Login: user.Login,
 	})
 	if err != nil {
@@ -61,15 +61,15 @@ func (s *Service) Register(ctx context.Context, user *User) (*User, error) {
 	return u, err
 }
 
-func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *GetPars) (*UserBalance, error) {
+func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *entities.UserParameters) (*entities.UserBalance, error) {
 	user, err := s.Get(ctx, pars)
 	if err != nil {
 		return nil, err
 	}
 
-	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &bonusTransactionsModel.ListPars{
+	bonusTransactionsList, err := s.bonusTransactionsService.List(ctx, &entities.BonusTransactionsListPars{
 		UserID:          &pars.ID,
-		TransactionType: bonusTransactionsModel.Debit,
+		TransactionType: entities.Debit,
 	})
 	if err != nil {
 		return nil, err
@@ -80,29 +80,29 @@ func (s *Service) GetBalanceWithWithdrawn(ctx context.Context, pars *GetPars) (*
 		withdrawn += v.Sum
 	}
 
-	return &UserBalance{
+	return &entities.UserBalance{
 		Current:   user.Balance,
 		Withdrawn: withdrawn,
 	}, nil
 }
 
-func (s *Service) List(ctx context.Context, pars *ListPars) ([]*User, error) {
-	return s.repoDB.List(ctx, pars)
+func (s *Service) List(ctx context.Context, pars *entities.UserListPars) ([]*entities.User, error) {
+	return s.repoDB.ListUsers(ctx, pars)
 }
 
-func (s *Service) Create(ctx context.Context, obj *User) error {
+func (s *Service) Create(ctx context.Context, obj *entities.User) error {
 	return s.repoDB.Create(ctx, obj)
 }
 
-func (s *Service) Get(ctx context.Context, pars *GetPars) (*User, error) {
+func (s *Service) Get(ctx context.Context, pars *entities.UserParameters) (*entities.User, error) {
 	return s.repoDB.Get(ctx, pars)
 }
 
-func (s *Service) Update(ctx context.Context, pars *GetPars) error {
+func (s *Service) Update(ctx context.Context, pars *entities.UserParameters) error {
 	return s.repoDB.Update(ctx, pars)
 }
 
-func (s *Service) Delete(ctx context.Context, pars *GetPars) error {
+func (s *Service) Delete(ctx context.Context, pars *entities.UserParameters) error {
 	return s.repoDB.Delete(ctx, pars)
 }
 
